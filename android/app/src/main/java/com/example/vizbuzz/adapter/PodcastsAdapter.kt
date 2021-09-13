@@ -43,4 +43,11 @@ class PodcastsAdapter(private val fragment: Fragment, private val podcasts: Muta
         val podcast = podcasts[position]
         holder.bind(podcast)
     }
+
+    fun addAll(newPods: List<Podcast>?) {
+        if (newPods != null) {
+            podcasts.addAll(newPods)
+        }
+        notifyDataSetChanged()
+    }
 }

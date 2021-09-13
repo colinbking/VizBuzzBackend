@@ -6,12 +6,15 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.vizbuzz.R
 import com.example.vizbuzz.adapter.PodcastsAdapter
 import com.example.vizbuzz.models.Podcast
+import com.example.vizbuzz.viewmodels.HomeViewModel
 
 // TODO: Rename parameter arguments, choose names that match
 // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
@@ -29,6 +32,8 @@ class HomeFragment : Fragment() {
     private var rvPodcasts: RecyclerView? = null
     private var adapterPodcasts: ArrayList<Podcast> = ArrayList()
     private var adapter: PodcastsAdapter? = null
+    private var viewModel: HomeViewModel? = null
+    private var podcastsReceived: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,9 +42,7 @@ class HomeFragment : Fragment() {
         arguments?.let {
             param1 = it.getString(ARG_PARAM1)
         }
-        adapterPodcasts.add(Podcast.newInstance("Podcast 1", "Podcast 1 Transcript: Hello World!"))
-        adapterPodcasts.add(Podcast.newInstance("Podcast 2", "Podcast 2 Transcript: Hello World!"))
-        adapterPodcasts.add(Podcast.newInstance("Podcast 3", "Podcast 3 Transcript: Hello World!"))
+
 
     }
 
@@ -54,7 +57,21 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         rvPodcasts = view.findViewById(R.id.rvPodcasts)
+
+        // Getting the view model this way makes it so the view model lives even if the fragment dies.
+        viewModel = ViewModelProviders.of(this).get(HomeViewModel::class.java)
+        val podcastsObserver: Observer<List<Podcast>> = Observer<List<Podcast>> { pods ->
+            Log.i(TAG, "List of podcasts received")
+            if (podcastsReceived == 0) {
+
+                podcastsReceived = 1
+                adapter?.addAll(pods)
+            }
+
+        }
+        viewModel?.allPodcasts()?.observe(viewLifecycleOwner, podcastsObserver)
         initializeRvPodcasts()
+        viewModel?.getPodcasts()
     }
 
     private fun initializeRvPodcasts() {
