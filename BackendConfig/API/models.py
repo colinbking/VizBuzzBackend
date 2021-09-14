@@ -8,5 +8,5 @@ class Transcript(models.Model):
     all_text = "" 
 
     def __str__(self):
-        return self.name
+        return self.podcast_name
         
