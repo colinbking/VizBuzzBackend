@@ -1,6 +1,7 @@
 from django.test import TestCase
 from .models import Transcript
 
+
 class TestModels(TestCase):
     """
     Class for testing all models.
@@ -9,8 +10,8 @@ class TestModels(TestCase):
         """
         Defines a dummy Transcript object.
         """
-        self.transcript = Transcript.objects.create(podcast_name = '413 Podcast', 
-                                                    alias="413")
+        self.transcript = Transcript.objects.create(
+            podcast_name='413 Podcast', alias="413")
 
     def test_transcript_model(self):
         """
