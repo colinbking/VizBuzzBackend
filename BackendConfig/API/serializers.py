@@ -9,4 +9,4 @@ from .models import Transcript
 class TranscriptSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Transcript
-        fields = ('name', 'alias', 'all_text')
+        fields = ('name', 'alias', 'color', 'all_text')
