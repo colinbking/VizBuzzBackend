@@ -24,12 +24,6 @@ jobs:
       run: |
         pip install flake8
         flake8
-    - name: Coverage report
-      run: |
-        pip install coverage
-        cd BackendConfig
-        coverage run manage.py test
-        coverage report
     - name: Django Testing
       run: |
         python3 manage.py test
