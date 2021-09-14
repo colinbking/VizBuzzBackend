@@ -25,9 +25,12 @@ class TranscriptView(views.APIView):
 
     def get(self, request, format=None):
         """
-        Return a single podcast transcript.
+        Return 3 podcast transcripts.
         """
         # uses internal django parser based on content-type header
         # data = request.data
-        temp_dummy_transcript = {"name": "hello", "alias": "world", "color" : "green", "all_text": "Hello Dr. Wallach"}
-        return Response(temp_dummy_transcript)
+        dummy_transcript_1 = {"name": "hello1", "alias": "world1", "color": "green", "all_text": "Hello1 Dr. Wallach"}
+        dummy_transcript_2 = {"name": "hello2", "alias": "world2", "color": "red", "all_text": "Hello2 Dr. Wallach"}
+        dummy_transcript_3 = {"name": "hello3", "alias": "world3", "color": "green", "all_text": "Hello3 Dr. Wallach"}
+        dummy_response = {"transcripts": [dummy_transcript_1, dummy_transcript_2, dummy_transcript_3]}
+        return Response(dummy_response)
