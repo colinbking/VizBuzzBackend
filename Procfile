@@ -1,1 +1,1 @@
-web: gunicorn BackendCOnfig.wsgi
+web: gunicorn BackendConfig.wsgi
