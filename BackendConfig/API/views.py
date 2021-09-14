@@ -29,5 +29,5 @@ class TranscriptView(views.APIView):
         """
         # uses internal django parser based on content-type header
         # data = request.data
-        temp_dummy_transcript = {"name": "hello", "alias": "world", "color" : "green", "all_text": "Hello Dr. Wallach"}
+        temp_dummy_transcript = {"name": "hello", "alias": "world", "color": "green", "all_text": "Hello Dr. Wallach"}
         return Response(temp_dummy_transcript)
