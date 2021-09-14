@@ -26,4 +26,5 @@ jobs:
         flake8
     - name: Django Testing
       run: |
+        cd BackendConfig
         python3 manage.py test
