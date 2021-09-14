@@ -26,7 +26,9 @@ SECRET_KEY = 'django-insecure-2o@1!k1#o+l!)z$%af)g2s%k1@r#^vbavsaq-ecen+w3-)-*10
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['https://vizbuzz-backend.herokuapp.com/',
+'localhost',
+'127.0.0.1']
 
 
 # Application definition
