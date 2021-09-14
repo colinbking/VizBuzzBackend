@@ -8,3 +8,6 @@ media/
 # Distribution / packaging
 .Python
 env/
+
+# IDE specific items
+.vscode
