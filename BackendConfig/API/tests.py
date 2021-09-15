@@ -26,6 +26,6 @@ class TestModels(TestCase):
         """
         Tests if a happy sentence returns "green"
         """
-        text = "I had a really amazing day. It was the best day ever!" 
+        text = "I had a really amazing day. It was the best day ever!"
         res = what_color_is_this_sentence(text)
         self.assertEqual("green", res)
