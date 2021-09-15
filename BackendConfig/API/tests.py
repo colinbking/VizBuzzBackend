@@ -1,6 +1,6 @@
 from django.test import TestCase
 from .models import Transcript
-from nlp import what_color_is_this_sentence
+from .nlp import what_color_is_this_sentence
 
 
 class TestModels(TestCase):
