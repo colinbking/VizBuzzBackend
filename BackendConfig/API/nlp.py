@@ -1,4 +1,5 @@
 import spacy
+from spacytextblob.spacytextblob import SpacyTextBlob
 
 
 def what_color_is_this_sentence(text):
