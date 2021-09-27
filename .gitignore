@@ -12,4 +12,4 @@ env/
 .vscode
 
 # Secure Data
-BackendConfig/Transcriber/key-file.json
+BackendConfig/API/Transcriber/key-file.json
