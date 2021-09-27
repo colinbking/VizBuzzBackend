@@ -3,6 +3,8 @@ from django.http import HttpResponse
 from rest_framework.response import Response
 from .models import Transcript
 from .serializers import TranscriptSerializer
+from ..Transcriber.transcriber import *
+import json
 
 
 def homePageView(request):
@@ -34,3 +36,28 @@ class TranscriptView(views.APIView):
         dummy_transcript_3 = {"name": "hello3", "alias": "world3", "color": "green", "all_text": "Hello3 Dr. Wallach"}
         dummy_response = {"transcripts": [dummy_transcript_1, dummy_transcript_2, dummy_transcript_3]}
         return Response(dummy_response)
+
+
+# Simple Views, an alternative to ViewSets, require specific declaration for each action.
+class AudioUploadView(views.APIView):
+    # authentication_classes tbd
+    # permission_classes tbd
+
+    def __init__(self):
+        self.transcriber = Transcriber()
+
+    def post(self, request, format=None):
+        """
+        Accepts bucket and key identifier for an audio file and transcribes it
+        """
+        # uses internal django parser based on content-type header
+        # data = request.data
+        
+        json_data = json.loads(request.body)
+        bucket = json_data["audio_bucket"]
+        audio_key = json_data["audio_key"]
+
+        if self.transcriber.transcribe(bucket, audio_key):
+            HttpResponse(200)
+
+        return HttpResponse(500)
