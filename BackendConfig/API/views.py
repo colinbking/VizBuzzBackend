@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from rest_framework.response import Response
 from .models import Transcript
 from .serializers import TranscriptSerializer
-from ..Transcriber.transcriber import *
+from .Transcriber.transcriber import *
 import json
 
 
