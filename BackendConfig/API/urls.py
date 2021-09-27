@@ -1,6 +1,6 @@
 from django.urls import include, path
 from rest_framework import routers
-from .views import *
+from .views import TranscriptViewSet, TranscriptView, AudioUploadView, homePageView
 
 # Routers ensure requests end up at right source dynamically,
 # they work with viewsets to route requests.

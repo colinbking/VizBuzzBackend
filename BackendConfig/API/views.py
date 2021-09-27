@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from rest_framework.response import Response
 from .models import Transcript
 from .serializers import TranscriptSerializer
-from .Transcriber.transcriber import *
+from .Transcriber.transcriber import Transcriber
 import json
 
 
@@ -52,7 +52,7 @@ class AudioUploadView(views.APIView):
         """
         # uses internal django parser based on content-type header
         # data = request.data
-        
+
         json_data = json.loads(request.body)
         bucket = json_data["audio_bucket"]
         audio_key = json_data["audio_key"]

@@ -7,12 +7,14 @@ import io
 # Run export GOOGLE_APPLICATION_CREDENTIALS="/<replace-with-the-path-where-the-key-is>/key-file.json"
 # Run pip install --upgrade google-cloud-speech
 
+
 class Transcriber():
     # given a s3 bucket and a key to a specific file, transcribes it and drops it to a
     # our transcript s3 bucket.
     def transcribe(self, bucket, key):
         print("transcribing audio file with key: ", key)
         return True
+
 
 # Creates google client
 client = speech.SpeechClient()
