@@ -14,7 +14,7 @@ class Transcript(models.Model):
         return self.podcast_name
 
 class Podcast(models.Model):
-    id = models.CharField(max_length=200)
+    id = models.CharField(max_length=200, primary_key=True)
     s3_audio_id = models.CharField(max_length=300)
     s3_transcript_id = models.CharField(max_length=300)
     name = models.CharField(max_length=300)
@@ -27,13 +27,13 @@ class Podcast(models.Model):
         return self.name
 
 class User(models.Model):
-    id = models.CharField(max_length=200)
+    id = models.CharField(max_length=200, primary_key=True)
     name = models.CharField(max_length=100)
     username = models.CharField(max_length=100)
-    favorites = ArrayField(models.CharField(max_length = 10, blank = True), size = 10)
+    favorites = ArrayField(models.CharField(max_length = 10, blank = True), size = 10, default=list)
     password = models.CharField(max_length=100)
     google_login_info = models.CharField(max_length=300)
     
     def __str__(self):
         return self.username
-    
+
