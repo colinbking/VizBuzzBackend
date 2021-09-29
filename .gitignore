@@ -13,3 +13,4 @@ env/
 
 # Secure Data
 BackendConfig/API/Transcriber/key-file.json
+.env
