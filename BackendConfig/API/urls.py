@@ -10,8 +10,10 @@ router.register(r'transcripts', TranscriptViewSet)
 
 urlpatterns = [
     path('', homePageView, name='home'),
-    path('api-auth',
-         include('rest_framework.urls', namespace='rest_framework')),
+    path(
+        'api-auth',
+        include('rest_framework.urls', namespace='rest_framework')
+        ),
     path('view-transcripts', TranscriptView.as_view(), name="simpleView"),
     path('transcribe', AudioUploadView.as_view(), name="transcribeView")
 ]

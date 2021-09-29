@@ -1,5 +1,5 @@
 from rest_framework import viewsets, views
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse, HttpResponseServerError
 from rest_framework.response import Response
 from .models import Transcript
 from .serializers import TranscriptSerializer
@@ -59,10 +59,15 @@ class AudioUploadView(views.APIView):
         # data = request.data
 
         json_data = json.loads(request.body)
-        bucket = json_data["audio_bucket"]
-        audio_key = json_data["audio_key"]
 
-        if self.transcriber.transcribe(bucket, audio_key):
-            HttpResponse(200)
+        try:
+            bucket = json_data["audio_bucket"]
+            audio_key = json_data["audio_key"]
+            if self.transcriber.transcribe(bucket, audio_key):
+                return JsonResponse({'bucket': bucket, 'audio_key': audio_key})
 
-        return HttpResponse(500)
+        except KeyError as e:
+            print(e)
+
+        print("failed to transcribe audio file with key: ", audio_key)
+        return HttpResponseServerError()
