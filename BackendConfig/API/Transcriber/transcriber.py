@@ -1,6 +1,6 @@
 # from google.cloud import speech
-import os
-import io
+# import os
+# import io
 
 # PREREQUISITES: Download the sanguine file from our backend drive and place it in the Transcriber directory.
 # Rename that file to key-file.json.

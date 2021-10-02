@@ -3,7 +3,7 @@
 # the appropriate model for backend manipulation.
 
 from rest_framework import serializers
-from .models import *
+from .models import Transcript, Podcast, User
 
 
 class TranscriptSerializer(serializers.HyperlinkedModelSerializer):
@@ -15,12 +15,29 @@ class TranscriptSerializer(serializers.HyperlinkedModelSerializer):
 class PodcastSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Podcast
-        fields = ('id', 's3_audio_id', 's3_transcript_id', 'name', 'episode_number', 'author', 'publsih_date', 'rss_url')
+        fields = (
+                'id',
+                'audio_bucket_id',
+                'audio_file_id',
+                'transcript_bucket_id',
+                'transcript_file_id',
+                'name',
+                'episode_number',
+                'author',
+                'publsih_date',
+                'rss_url',
+                'duration'
+                )
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'name', 'username', 'favorites', 'password', 'google_login_info')
-
-
+        fields = (
+                'id',
+                'name',
+                'username',
+                'favorites',
+                'password',
+                'google_login_info'
+                )
