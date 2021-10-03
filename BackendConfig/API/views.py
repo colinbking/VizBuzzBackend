@@ -88,10 +88,11 @@ class UserView(views.APIView):
 
         except KeyError as e:
             print(e)
+            return Response("Request Format Incorrect", status=400)
         except Exception:
-            print("failed to save User")
+            return Response("Exception Occurred in trying to create new User",status=500)
 
-        return HttpResponseServerError()
+        return HttpResponseServerError("Server Error")
 
 
 class PodcastView(views.APIView):
