@@ -59,7 +59,7 @@ class UserView(views.APIView):
         try:
             json_data = json.loads(request.body)
             req_id = json_data["id"]
-            queried_user = UserSerializer(User.objects.get(id=req_id))
+            queried_user = UserSerializer(data=User.objects.get(id=req_id))
             if queried_user.is_valid():
                 return JsonResponse(queried_user.data)
 
@@ -103,7 +103,7 @@ class PodcastView(views.APIView):
         try:
             json_data = json.loads(request.body)
             req_id = json_data["id"]
-            queried = PodcastSerializer(Podcast.objects.get(id=req_id))
+            queried = PodcastSerializer(data=Podcast.objects.get(id=req_id))
             if queried.is_valid():
                 return JsonResponse(queried.data)
 
