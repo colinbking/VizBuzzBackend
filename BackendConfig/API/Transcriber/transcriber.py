@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import time
 import json
 from functools import reduce
+import wave
 
 compresslambda = lambda x: [j for i in x for j in i]
 addlambda = lambda x: reduce(lambda a,b: a + " " + b, x)
@@ -36,7 +37,9 @@ class vz_speech_recog:
         speech_config.request_word_level_timestamps()
 
         # <SpeechContinuousRecognitionWithFile>
-        audio_config = speechsdk.audio.AudioConfig(filename=filename)
+        stream = speechsdk.audio.PushAudioInputStream()
+        audio_config = speechsdk.audio.AudioConfig(stream=stream)
+        # audio_config = speechsdk.audio.AudioConfig(filename=filename)
 
         speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
 
@@ -48,23 +51,29 @@ class vz_speech_recog:
             nonlocal done
             done = True
 
-        # Connect callbacks to the events fired by the speech recognizer
-    #     speech_recognizer.recognizing.connect(lambda evt: test_print(evt))
         speech_recognizer.recognized.connect(lambda evt: self.save_transcript(evt))
-#         speech_recognizer.session_started.connect(lambda evt: print('SESSION STARTED: {}'.format(evt)))
-#         speech_recognizer.session_stopped.connect(lambda evt: print('SESSION STOPPED {}'.format(evt)))
-#         speech_recognizer.canceled.connect(lambda evt: print('CANCELED {}'.format(evt)))
-#         stop continuous recognition on either session stopped or canceled events
         speech_recognizer.session_stopped.connect(stop_cb)
         speech_recognizer.canceled.connect(stop_cb)
 
+        n_bytes = 6400
+        wav_fh = wave.open(filename) # filename can be a file-like object, which is what we will retrieve from AWS
+
         # Start continuous speech recognition
         speech_recognizer.start_continuous_recognition()
-        while not done:
-            time.sleep(.5)
+        try:
+            while(True):
+                frames = wav_fh.readframes(n_bytes)
+                # print('read {} bytes'.format(len(frames)))
+                if not frames:
+                    break
 
-        speech_recognizer.stop_continuous_recognition()
-        return speech_recognizer
+                stream.write(frames)
+                time.sleep(.1)
+        finally:
+            # stop recognition and clean up
+            wav_fh.close()
+            stream.close()
+            speech_recognizer.stop_continuous_recognition()
         # </SpeechContinuousRecognitionWithFile>
 
     def save_transcript(self, istr):
