@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 db.sqlite3
 media/
+.env
 
 # Distribution / packaging
 .Python
@@ -13,3 +14,4 @@ env/
 
 # Secure Data
 BackendConfig/API/Transcriber/key-file.json
+.env
