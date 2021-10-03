@@ -56,12 +56,14 @@ class UserView(views.APIView):
         """
         returns a specific user
         """
+        err = ""
         try:
             json_data = json.loads(request.body)
             req_id = json_data["id"]
             queried_user = UserSerializer(data=User.objects.get(id=req_id))
             if queried_user.is_valid():
                 return JsonResponse(queried_user.data)
+            err += str(queried_user.errors)
 
         except KeyError:
             return Response("id key not found in request body", status=400)
@@ -126,7 +128,7 @@ class PodcastView(views.APIView):
                 audio_file_id=d['audio_file_id'],
                 transcript_bucket_id=d['transcript_bucket_id'],
                 transcript_file_id=d['transcript_file_id'],
-                name=d['podcast_name'],
+                name=d['name'],
                 episode_number=d['episode_number'],
                 author=d['author'],
                 publish_date=d['publish_date'],
