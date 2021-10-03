@@ -59,11 +59,11 @@ class UserView(views.APIView):
         try:
             json_data = json.loads(request.body)
             req_id = json_data["id"]
-
             queried_user = UserSerializer(User.objects.get(id=req_id))
-            return JsonResponse(queried_user.data)
+            if queried_user.is_valid():
+                return JsonResponse(queried_user.data)
 
-        except KeyError as e:
+        except KeyError:
             return Response("id key not found in request body", status=400)
         except Exception as e:
             return Response("failed to get User" + str(e), status=400)
@@ -87,8 +87,7 @@ class UserView(views.APIView):
             return JsonResponse({"saved_user_id": d["id"]}, status=200)
 
         except KeyError as e:
-            print(e)
-            return Response("Request Format Incorrect", status=400)
+            return Response("Request Format Incorrect: " + str(e), status=400)
         except Exception as e:
             return Response("Exception Occurred in trying to create new User: " + str(e), status=500)
 
@@ -104,16 +103,16 @@ class PodcastView(views.APIView):
         try:
             json_data = json.loads(request.body)
             req_id = json_data["id"]
-
             queried = PodcastSerializer(Podcast.objects.get(id=req_id))
-            return JsonResponse(queried.data)
+            if queried.is_valid():
+                return JsonResponse(queried.data)
 
-        except KeyError as e:
-            print(e)
-        except Exception:
-            print("failed to get User with id: ", req_id)
+        except KeyError:
+            return Response("id key not found in request body", status=400)
+        except Exception as e:
+            return Response("failed to get Podcast, " + str(e), status=400)
 
-        return HttpResponseServerError()
+        return HttpResponseServerError("Server Error")
 
     def post(self, request, format=None):
         """
@@ -136,9 +135,11 @@ class PodcastView(views.APIView):
             return JsonResponse({"saved_podcast_id": d["id"]}, status=200)
 
         except KeyError as e:
-            print(e)
-        except Exception:
-            print("failed to save User")
+            return Response("Request Format Incorrect: " + str(e), status=400)
+        except Exception as e:
+            return Response("Exception Occurred in trying to create new Podcast: " + str(e), status=500)
+
+        return HttpResponseServerError("Server Error")
 
 
 # Simple Views, an alternative to ViewSets, require specific declaration for each action.
