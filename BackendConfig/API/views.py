@@ -1,21 +1,14 @@
 from rest_framework import viewsets, views
 from django.http import HttpResponse, JsonResponse, HttpResponseServerError
 from rest_framework.response import Response
-from .models import Transcript
-from .serializers import TranscriptSerializer
+from .models import Podcast, User
+from .serializers import PodcastSerializer, UserSerializer
 from .Transcriber.transcriber import Transcriber
 import json
 
 
 def homePageView(request):
     return HttpResponse('Hello, World!')
-
-
-class TranscriptViewSet(viewsets.ModelViewSet):
-    """[View to see a transcript]
-    """
-    queryset = Transcript.objects.all()
-    serializer_class = TranscriptSerializer
 
 
 class TranscriptView(views.APIView):
@@ -43,6 +36,110 @@ class TranscriptView(views.APIView):
         return Response(dummy_response)
 
 
+class UserViewSet(viewsets.ModelViewSet):
+    """[View to see all Users]
+    """
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+
+
+class PodcastViewSet(viewsets.ModelViewSet):
+    """[View to see all transcripts]
+    """
+    queryset = Podcast.objects.all()
+    serializer_class = PodcastSerializer
+
+
+class UserView(views.APIView):
+
+    def get(self, request, format=None):
+        """
+        returns a specific user
+        """
+        try:
+            json_data = json.loads(request.body)
+            req_id = json_data("id")
+
+            data = UserSerializer.serialize('json', User.objects.get(id=req_id))
+            return JsonResponse(data)
+
+        except KeyError as e:
+            print(e)
+        except Exception:
+            print("failed to get User with id: ", req_id)
+
+        return HttpResponseServerError()
+
+    def post(self, request, format=None):
+        """
+        creates a user
+        """
+        try:
+            d = json.loads(request.body)
+            User(
+                id=d['id'],
+                name=d['name'],
+                username=d['username'],
+                favorites=d['favorites'],
+                password=d['password'],
+                google_login_info=d['google_login_info']
+            ).save()
+            return JsonResponse({"saved_user_id": d["id"]}, status=200)
+
+        except KeyError as e:
+            print(e)
+        except Exception:
+            print("failed to save User")
+
+        return HttpResponseServerError()
+
+
+class PodcastView(views.APIView):
+
+    def get(self, request, format=None):
+        """
+        returns a specific Podcast
+        """
+        try:
+            json_data = json.loads(request.body)
+            req_id = json_data("id")
+
+            data = UserSerializer.serialize('json', User.objects.get(id=req_id))
+            return JsonResponse(data)
+
+        except KeyError as e:
+            print(e)
+        except Exception:
+            print("failed to get User with id: ", req_id)
+
+        return HttpResponseServerError()
+
+    def post(self, request, format=None):
+        """
+        creates a podcast entry
+        """
+        try:
+            d = json.loads(request.body)
+            Podcast(
+                id=d['id'],
+                audio_bucket_id=d['audio_bucket_id'],
+                audio_file_id=d['audio_file_id'],
+                transcript_bucket_id=d['transcript_bucket_id'],
+                transcript_file_id=d['transcript_file_id'],
+                name=d['podcast_name'],
+                episode_number=d['episode_number'],
+                author=d['author'],
+                publish_date=d['publish_date'],
+                rss_url=d['rss_url']
+            ).save()
+            return JsonResponse({"saved_podcast_id": d["id"]}, status=200)
+
+        except KeyError as e:
+            print(e)
+        except Exception:
+            print("failed to save User")
+
+
 # Simple Views, an alternative to ViewSets, require specific declaration for each action.
 class AudioUploadView(views.APIView):
     # authentication_classes tbd
@@ -68,6 +165,6 @@ class AudioUploadView(views.APIView):
 
         except KeyError as e:
             print(e)
-
-        print("failed to transcribe audio file with key: ", audio_key)
+        except Exception as e:
+            print("failed to transcribe audio file with key: ", audio_key, e)
         return HttpResponseServerError()
