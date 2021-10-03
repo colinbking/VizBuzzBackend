@@ -12,7 +12,7 @@ class TranscriptSerializer(serializers.HyperlinkedModelSerializer):
         fields = ('name', 'alias', 'color', 'all_text')
 
 
-class PodcastSerializer(serializers.HyperlinkedModelSerializer):
+class PodcastSerializer(serializers.ModelSerializer):
     class Meta:
         model = Podcast
         fields = (
@@ -30,7 +30,7 @@ class PodcastSerializer(serializers.HyperlinkedModelSerializer):
                 )
 
 
-class UserSerializer(serializers.HyperlinkedModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
