@@ -26,7 +26,8 @@ class PodcastSerializer(serializers.ModelSerializer):
                 'author',
                 'publish_date',
                 'rss_url',
-                'duration'
+                'duration',
+                'word_info'
                 )
 
 

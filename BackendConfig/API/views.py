@@ -129,7 +129,8 @@ class PodcastView(views.APIView):
                 author=d['author'],
                 publish_date=d['publish_date'],
                 rss_url=d['rss_url'],
-                duration=d['duration']
+                duration=d['duration'],
+                word_info=d['word_info']
             ).save()
             return JsonResponse({"saved_podcast_id": d["id"]}, status=200)
 
