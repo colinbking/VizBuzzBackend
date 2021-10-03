@@ -70,7 +70,7 @@ class UserView(views.APIView):
         except Exception as e:
             return Response("failed to get User" + str(e), status=400)
 
-        return HttpResponseServerError("Server Errpr")
+        return HttpResponseServerError("Server Error" + err)
 
     def post(self, request, format=None):
         """
@@ -102,19 +102,21 @@ class PodcastView(views.APIView):
         """
         returns a specific Podcast
         """
+        err = ""
         try:
             json_data = json.loads(request.body)
             req_id = json_data["id"]
             queried = PodcastSerializer(data=Podcast.objects.get(id=req_id))
             if queried.is_valid():
                 return JsonResponse(queried.data)
+            err += str(queried.errors)
 
         except KeyError:
             return Response("id key not found in request body", status=400)
         except Exception as e:
             return Response("failed to get Podcast, " + str(e), status=400)
 
-        return HttpResponseServerError("Server Error")
+        return HttpResponseServerError("Server Error: " + err)
 
     def post(self, request, format=None):
         """
@@ -132,7 +134,8 @@ class PodcastView(views.APIView):
                 episode_number=d['episode_number'],
                 author=d['author'],
                 publish_date=d['publish_date'],
-                rss_url=d['rss_url']
+                rss_url=d['rss_url'],
+                duration=d['duration']
             ).save()
             return JsonResponse({"saved_podcast_id": d["id"]}, status=200)
 
