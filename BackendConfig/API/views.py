@@ -64,7 +64,7 @@ class AudioUploadView(views.APIView):
             bucket = json_data["audio_bucket"]
             audio_key = json_data["audio_key"]
             if self.transcriber.transcribe(bucket, audio_key):
-                return JsonResponse({'bucket': bucket, 'audio_key': audio_key})
+                return JsonResponse({'bucket': bucket, 'audio_key': audio_key}) #why is the response the json?
 
         except KeyError as e:
             print(e)

@@ -1,41 +1,99 @@
-# from google.cloud import speech
-# import os
-# import io
+import azure.cognitiveservices.speech as speechsdk
+import os
+from dotenv import load_dotenv
+import time
+import json
+from functools import reduce
 
-# PREREQUISITES: Download the sanguine file from our backend drive and place it in the Transcriber directory.
-# Rename that file to key-file.json.
-# Run export GOOGLE_APPLICATION_CREDENTIALS="/<replace-with-the-path-where-the-key-is>/key-file.json"
-# Run pip install --upgrade google-cloud-speech
+compresslambda = lambda x: [j for i in x for j in i]
+addlambda = lambda x: reduce(lambda a,b: a + " " + b, x)
 
+def add_key(d, k, v):
+    d[k] = v
+    return d
 
 class Transcriber():
     # given a s3 bucket and a key to a specific file, transcribes it and drops it to a
     # our transcript s3 bucket.
     def transcribe(self, bucket, key):
         print("transcribing audio file with key: ", key)
+        vzsr = vz_speech_recog()
+        sr = vzsr.speech_recognize_continuous_from_file("The_smoking_tire_daniel_osborne.wav")
+        output_format = vzsr.create_output()
+        ## what do i do now with this output format?
         return True
 
+class vz_speech_recog:
+    def __init__(self):
+        self.best_lexs = []
+        self.jrds = []
+       
 
-# # Creates google client
-# client = speech.SpeechClient()
+    def speech_recognize_continuous_from_file(self, filename):
+        """performs continuous speech recognition with input from an audio file"""
 
-# # Full path of the audio file, Replace with your file name
-# file_name = os.path.join(os.path.dirname(__file__), "Welcome.wav")
+        speech_config = speechsdk.SpeechConfig(subscription=os.getenv('SPEECHKEY'), region="eastus")
+        speech_config.request_word_level_timestamps()
 
-# # Loads the audio file into memory
-# with io.open(file_name, "rb") as audio_file:
-#     content = audio_file.read()
-#     audio = speech.RecognitionAudio(content=content)
+        # <SpeechContinuousRecognitionWithFile>
+        audio_config = speechsdk.audio.AudioConfig(filename=filename)
 
-# config = speech.RecognitionConfig(
-#     encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-#     audio_channel_count=1,
-#     language_code="en-US",
-# )
+        speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
 
-# # Sends the request to google to transcribe the audio
-# response = client.recognize(request={"config": config, "audio": audio})
+        done = False
 
-# # Reads the response
-# for result in response.results:
-#     print("Transcript: {}".format(result.alternatives[0].transcript))
+        def stop_cb(evt):
+            """callback that signals to stop continuous recognition upon receiving an event `evt`"""
+#             print('CLOSING on {}'.format(evt))
+            nonlocal done
+            done = True
+
+        # Connect callbacks to the events fired by the speech recognizer
+    #     speech_recognizer.recognizing.connect(lambda evt: test_print(evt))
+        speech_recognizer.recognized.connect(lambda evt: self.save_transcript(evt))
+#         speech_recognizer.session_started.connect(lambda evt: print('SESSION STARTED: {}'.format(evt)))
+#         speech_recognizer.session_stopped.connect(lambda evt: print('SESSION STOPPED {}'.format(evt)))
+#         speech_recognizer.canceled.connect(lambda evt: print('CANCELED {}'.format(evt)))
+#         stop continuous recognition on either session stopped or canceled events
+        speech_recognizer.session_stopped.connect(stop_cb)
+        speech_recognizer.canceled.connect(stop_cb)
+
+        # Start continuous speech recognition
+        speech_recognizer.start_continuous_recognition()
+        while not done:
+            time.sleep(.5)
+
+        speech_recognizer.stop_continuous_recognition()
+        return speech_recognizer
+        # </SpeechContinuousRecognitionWithFile>
+
+    def save_transcript(self, istr):
+
+#         try:
+#             text_file = open("sample.txt", "a")
+#             n = text_file.write(istr.result + "\n")
+#             text_file.close()
+#         except:
+#             print('error saving')
+
+#         print("-------------------")
+        jr = istr.result.properties[speechsdk.PropertyId.SpeechServiceResponse_JsonResult]
+        jrd = json.loads(jr)
+#         print("_________")
+        curmax = {}
+        curmaxcond = 0
+        for jrdi in jrd['NBest']:
+    #         print(jrdi['Confidence'], curmaxcond)
+            if jrdi['Confidence'] > curmaxcond:
+                curmaxcond = jrdi['Confidence']
+                curmax = jrdi
+                
+#         print(curmax)
+        self.jrds.append(jrd)
+        self.best_lexs.append(curmax)
+
+    def create_output(self):
+        # assert(len(lex_words) == len(words_and_offsets))
+        words_and_offsets = compresslambda([self.best_lexs[i]['Words'] for i in range(len(self.best_lexs))])
+        lex_words = addlambda([self.best_lexs[i]['Lexical'] for i in range(len(self.best_lexs))]).split(" ")
+        return [add_key(d, "display", l) for d, l in zip(words_and_offsets, lex_words)]
