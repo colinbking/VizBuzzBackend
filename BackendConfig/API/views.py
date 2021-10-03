@@ -89,8 +89,8 @@ class UserView(views.APIView):
         except KeyError as e:
             print(e)
             return Response("Request Format Incorrect", status=400)
-        except Exception:
-            return Response("Exception Occurred in trying to create new User",status=500)
+        except Exception as e:
+            return Response("Exception Occurred in trying to create new User: " + str(e), status=500)
 
         return HttpResponseServerError("Server Error")
 
