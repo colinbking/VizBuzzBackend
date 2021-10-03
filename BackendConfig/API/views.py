@@ -64,11 +64,11 @@ class UserView(views.APIView):
             return JsonResponse(data)
 
         except KeyError as e:
-            print(e)
-        except Exception:
-            print("failed to get User with id: ", req_id)
+            return Response("id key not found in request body", status=400)
+        except Exception as e:
+            return Response("failed to get User with id: " + req_id + str(e), status=400)
 
-        return HttpResponseServerError()
+        return HttpResponseServerError("Server Errpr")
 
     def post(self, request, format=None):
         """
