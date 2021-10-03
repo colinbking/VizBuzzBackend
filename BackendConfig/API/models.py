@@ -26,6 +26,7 @@ class Podcast(models.Model):
     publish_date = models.DateTimeField()
     rss_url = models.CharField(max_length=300)
     duration = models.IntegerField()
+    word_info = models.JSONField()
 
     def __str__(self):
         return self.name
