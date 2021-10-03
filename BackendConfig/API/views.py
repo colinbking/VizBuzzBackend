@@ -66,7 +66,7 @@ class UserView(views.APIView):
         except KeyError as e:
             return Response("id key not found in request body", status=400)
         except Exception as e:
-            return Response("failed to get User with id: " + req_id + str(e), status=400)
+            return Response("failed to get User" + str(e), status=400)
 
         return HttpResponseServerError("Server Errpr")
 
