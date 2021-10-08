@@ -15,21 +15,15 @@ class Transcriber():
     # our transcript s3 bucket.
     def transcribe(self, bucket, key):
         print("transcribing audio file with key: ", key)
-        self.download_file(bucket, key)
-        return True
+        return self.download_file(bucket, key)
 
     def download_file(self, bucket, key):
         print("downloading file")
         s3 = boto3.client('s3')
-        try:
-            response = s3.get_object(Bucket=bucket, Key=key)
-            print("CONTENT TYPE: " + response['ContentType'])
-            return response['ContentType']
-        except Exception as e:
-            print(e)
-            # print('Error getting object {} from bucket {}.' +
-            #       'Make sure they exist and your bucket is in the same region as this function.'.format(key, bucket))
-            raise e
+
+        response = s3.get_object(Bucket=bucket, Key=key)
+        print("CONTENT TYPE: " + response['ContentType'])
+        return True
 
 # # Creates google client
 # client = speech.SpeechClient()
