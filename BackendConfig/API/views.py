@@ -167,6 +167,8 @@ class AudioUploadView(views.APIView):
 
         except KeyError as e:
             print(e)
+            return HttpResponseServerError(e)
         except Exception as e:
             print("failed to transcribe audio file with key: ", audio_key, e)
-        return HttpResponseServerError()
+            return HttpResponseServerError(e)
+        return HttpResponseServerError("unknown error")
