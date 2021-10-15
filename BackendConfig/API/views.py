@@ -6,7 +6,6 @@ from .serializers import PodcastSerializer, UserSerializer
 from .Transcriber.transcriber import Transcriber
 import json
 
-
 def homePageView(request):
     return HttpResponse('Hello, World!')
 
