@@ -7,7 +7,7 @@ import environ
 
 env = environ.Env()
 environ.Env.read_env()
-
+import os
 
 # PREREQUISITES: Download the sanguine file from our backend drive and place it in the Transcriber directory.
 # Rename that file to key-file.json.
@@ -34,8 +34,8 @@ class Transcriber():
         return True
     
     def upload_metadata(self, filename):
-        self.s3.upload_file('testfile.txt', env("TRANSCRIPT_BUCKET_NAME"),'/' + filename + '.txt')
-
+        return os.getcwd()
+        #self.s3.upload_file('testfile.txt', env("TRANSCRIPT_BUCKET_NAME"),'/' + filename + '.txt')
         
 
 # # Creates google client

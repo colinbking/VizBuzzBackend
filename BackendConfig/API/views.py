@@ -192,8 +192,8 @@ class TestUploadDataView(views.APIView):
 
         try:
             name = json_data["name"]
-            self.transcriber.upload_metadata(name)
-            return JsonResponse({"uploaded_name": name})
+            cwd = self.transcriber.upload_metadata(name)
+            return JsonResponse({"uploaded_name": name, "cwd": cwd})
 
         except KeyError as e:
             print(e)
