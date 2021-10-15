@@ -34,8 +34,7 @@ class Transcriber():
         return True
     
     def upload_metadata(self, filename):
-        return os.getcwd()
-        self.s3.upload_file('testfile.txt', env("TRANSCRIPT_BUCKET_NAME"),'/' + filename + '.txt')
+        self.s3.upload_file('testfile.txt', env("TRANSCRIPT_BUCKET_NAME"), filename + '.txt')
         
 
 # # Creates google client
