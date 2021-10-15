@@ -172,3 +172,35 @@ class AudioUploadView(views.APIView):
             print("failed to transcribe audio file with key: ", audio_key, e)
             return HttpResponseServerError(e)
         return HttpResponseServerError("unknown error")
+
+        
+# Simple Views, an alternative to ViewSets, require specific declaration for each action.
+class TestUploadDataView(views.APIView):
+    # authentication_classes tbd
+    # permission_classes tbd
+
+    def __init__(self):
+        self.transcriber = Transcriber()
+
+    def post(self, request, format=None):
+        """
+        Accepts bucket and key identifier for an audio file and transcribes it
+        """
+        # uses internal django parser based on content-type header
+        # data = request.data
+
+        json_data = json.loads(request.body)
+
+        try:
+            name = json_data["name"]
+            self.transcriber.upload_metadata(name)
+            return JsonResponse({"uploaded_name": name})
+
+        except KeyError as e:
+            print(e)
+            return HttpResponseServerError(e)
+        except Exception as e:
+            print("failed to upload audio data", e)
+            return HttpResponseServerError(e)
+        return HttpResponseServerError("unknown error")
+

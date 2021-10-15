@@ -13,17 +13,25 @@ import boto3
 class Transcriber():
     # given a s3 bucket and a key to a specific file, transcribes it and drops it to a
     # our transcript s3 bucket.
+
+    def __init__(self):
+        print("connecting to s3 using boto3")
+        self.s3 = boto3.client('s3')
+
     def transcribe(self, bucket, key):
         print("transcribing audio file with key: ", key)
         return self.download_file(bucket, key)
-
+    
     def download_file(self, bucket, key):
         print("downloading file")
-        s3 = boto3.client('s3')
-
-        response = s3.get_object(Bucket=bucket, Key=key)
+        response = self.s3.get_object(Bucket=bucket, Key=key)
         print("CONTENT TYPE: " + response['ContentType'])
         return True
+    
+    def upload_metadata(self, filename):
+        self.s3.Bucket('<bucket_name>').upload_file('testfile.txt','/' + filename + '.txt')
+
+        
 
 # # Creates google client
 # client = speech.SpeechClient()
