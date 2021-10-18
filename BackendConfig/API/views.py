@@ -16,23 +16,21 @@ class TranscriptView(views.APIView):
 
     def get(self, request, format=None):
         """
-        Return 3 podcast transcripts.
+        Return transcript metadata given podcast info.
         """
         # uses internal django parser based on content-type header
         # data = request.data
-        dummy_transcript_1 = {
-            "name": "hello1", "alias": "world1",
-            "color": "green", "all_text": "Hello1 Dr. Wallach"}
-        dummy_transcript_2 = {
-            "name": "hello2", "alias": "world2",
-            "color": "red", "all_text": "Hello2 Dr. Wallach"}
-        dummy_transcript_3 = {
-            "name": "hello3", "alias": "world3",
-            "color": "green", "all_text": "Hello3 Dr. Wallach"}
-        dummy_response = {
-            "transcripts":
-            [dummy_transcript_1, dummy_transcript_2, dummy_transcript_3]}
-        return Response(dummy_response)
+        try:
+            json_data = json.loads(request.body)
+            transcript_bucket_id=json_data['transcript_bucket_id'],
+            transcript_file_id=json_data['transcript_file_id']
+            transcript_json = self.s3.get_object(Bucket=transcript_bucket_id, Key=transcript_file_id)
+            return JsonResponse(transcript_json, status=200)
+
+        except KeyError:
+            return Response("transcript_bucket_id or transcript_file_id not found in request body", status=400)
+        except Exception as e:
+            return Response("failed to get transcript" + str(e), status=400)
 
 
 class UserViewSet(viewsets.ModelViewSet):
