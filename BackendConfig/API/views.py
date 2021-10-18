@@ -23,7 +23,7 @@ class TranscriptView(views.APIView):
         # data = request.data
         try:
             json_data = json.loads(request.body)
-            transcript_bucket_id=json_data['transcript_bucket_id'],
+            transcript_bucket_id=json_data['transcript_bucket_id']
             transcript_file_id=json_data['transcript_file_id']
             s3 = boto3.client('s3')
             transcript_json = s3.get_object(Bucket=transcript_bucket_id, Key=transcript_file_id)
