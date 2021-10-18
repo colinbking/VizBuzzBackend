@@ -5,6 +5,7 @@ from .models import Podcast, User
 from .serializers import PodcastSerializer, UserSerializer
 from .Transcriber.transcriber import Transcriber
 import json
+import boto3
 
 def homePageView(request):
     return HttpResponse('Hello, World!')
@@ -24,7 +25,8 @@ class TranscriptView(views.APIView):
             json_data = json.loads(request.body)
             transcript_bucket_id=json_data['transcript_bucket_id'],
             transcript_file_id=json_data['transcript_file_id']
-            transcript_json = self.s3.get_object(Bucket=transcript_bucket_id, Key=transcript_file_id)
+            s3 = boto3.client('s3')
+            transcript_json = s3.get_object(Bucket=transcript_bucket_id, Key=transcript_file_id)
             return JsonResponse(transcript_json, status=200)
 
         except KeyError:
