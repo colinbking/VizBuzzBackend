@@ -7,6 +7,10 @@ from functools import reduce
 # import boto3
 import spacy
 from spacytextblob.spacytextblob import SpacyTextBlob
+import azure.cognitiveservices.speech as speechsdk
+import pyAudioAnalysis.audioBasicIO as aio
+import shutil
+import wave
 
 load_dotenv()
 
@@ -14,7 +18,10 @@ compresslambda = lambda x: [j for i in x for j in i]
 addlambda = lambda x: reduce(lambda a,b: a + " " + b, x)
 
 def add_key(d, k, v, i):
-    d[k] = v
+    if (k == "Offset" or k == "Duration"):
+        d[k] = v * 1e-4
+    else:
+        d[k] = v
     d['index'] = i
     return d
 
@@ -37,6 +44,60 @@ class vz_speech_recog:
     def __init__(self):
         self.best_lexs = []
         self.jrds = []
+
+    def convert_folder(self, input_folder_path, output_folder_path):
+
+        o = aio.convert_dir_fs_wav_to_wav(input_folder_path, 16000, 1)
+        if os.path.exists(output_folder_path):
+            shutil.rmtree(output_folder_path)
+        # print(os.path.exists(f"{input_folder_path}/Fs16000_NC1/"))
+        # print(os.path.exists(output_folder_path))
+        os.rename(f"{input_folder_path}/Fs16000_NC1/", output_folder_path)
+        # shutil.rmtree(f"{input_folder_path}/Fs16000_NC1/")
+
+        # rename input_folder_path + os.sep + "Fs" + str(16000) +  "_" + "NC" + str(1) to 
+
+    def speech_recognition_with_push_stream(self, filename):
+
+        # Specify the path to an audio file containing speech (mono WAV / PCM with a sampling rate of 16kHz).
+
+        """gives an example how to use a push audio stream to recognize speech from a custom audio
+        source"""
+        speech_config = speechsdk.SpeechConfig(subscription=os.getenv('SPEECHKEY'), region="eastus")
+        speech_config.request_word_level_timestamps()
+
+        # setup the audio stream
+        stream = speechsdk.audio.PushAudioInputStream()
+        audio_config = speechsdk.audio.AudioConfig(stream=stream)
+
+        # instantiate the speech recognizer with push stream input
+        speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
+
+        # Connect callbacks to the events fired by the speech recognizer
+        speech_recognizer.recognized.connect(lambda evt: self.save_transcript(evt))
+
+        # The number of bytes to push per buffer
+        n_bytes = 3200
+        wav_fh = wave.open(filename)
+
+        # start continuous speech recognition
+        speech_recognizer.start_continuous_recognition()
+
+        # start pushing data until all data has been read from the file
+        try:
+            while(True):
+                frames = wav_fh.readframes(n_bytes // 2)
+                print('read {} bytes'.format(len(frames)))
+                if not frames:
+                    break
+
+                stream.write(frames)
+                time.sleep(.1)
+        finally:
+            # stop recognition and clean up
+            wav_fh.close()
+            stream.close()
+            speech_recognizer.stop_continuous_recognition()
        
 
     def speech_recognize_continuous_from_file(self, filename):
