@@ -25,6 +25,40 @@ def add_key(d, k, v, i):
     d['index'] = i
     return d
 
+def truncate_utf8_chars(filename, count, ignore_newlines=True):
+    """
+    Truncates last `count` characters of a text file encoded in UTF-8.
+    :param filename: The path to the text file to read
+    :param count: Number of UTF-8 characters to remove from the end of the file
+    :param ignore_newlines: Set to true, if the newline character at the end of the file should be ignored
+    """
+    with open(filename, 'rb+') as f:
+        last_char = None
+
+        size = os.fstat(f.fileno()).st_size
+
+        offset = 1
+        chars = 0
+        while offset <= size:
+            f.seek(-offset, os.SEEK_END)
+            b = ord(f.read(1))
+
+            if ignore_newlines:
+                if b == 0x0D or b == 0x0A:
+                    offset += 1
+                    continue
+
+            if b & 0b10000000 == 0 or b & 0b11000000 == 0b11000000:
+                # This is the first byte of a UTF8 character
+                chars += 1
+                if chars == count:
+                    # When `count` number of characters have been found, move current position back
+                    # with one byte (to include the byte just checked) and truncate the file
+                    f.seek(-1, os.SEEK_CUR)
+                    f.truncate()
+                    return
+            offset += 1
+
 class Transcriber():
     # given a s3 bucket and a key to a specific file, transcribes it and drops it to a
     # our transcript s3 bucket.
@@ -59,6 +93,9 @@ class vz_speech_recog:
 
     def speech_recognition_with_push_stream(self, filename):
 
+        with open('data.json', 'a') as fp:
+            fp.write("[ {\"Word\": \"VZBHEADERPLZIGNORE\"} [")
+
         # Specify the path to an audio file containing speech (mono WAV / PCM with a sampling rate of 16kHz).
 
         """gives an example how to use a push audio stream to recognize speech from a custom audio
@@ -75,6 +112,9 @@ class vz_speech_recog:
 
         # Connect callbacks to the events fired by the speech recognizer
         speech_recognizer.recognized.connect(lambda evt: self.save_transcript(evt))
+        speech_recognizer.session_stopped.connect(lambda evt: self.end_transcript(evt))
+        speech_recognizer.canceled.connect(lambda evt: self.end_transcript(evt))
+        # speech_recognizer.recognizing.connect(lambda evt: self.save_partial_transcript(evt))
 
         # The number of bytes to push per buffer
         n_bytes = 3200
@@ -87,7 +127,7 @@ class vz_speech_recog:
         try:
             while(True):
                 frames = wav_fh.readframes(n_bytes // 2)
-                print('read {} bytes'.format(len(frames)))
+                # print('read {} bytes'.format(len(frames)))
                 if not frames:
                     break
 
@@ -101,6 +141,10 @@ class vz_speech_recog:
        
 
     def speech_recognize_continuous_from_file(self, filename):
+
+        # with open('data.json', 'a') as fp:
+        #     fp.write("[")
+
         """performs continuous speech recognition with input from an audio file"""
 
         speech_config = speechsdk.SpeechConfig(subscription=os.getenv('SPEECHKEY'), region="eastus")
@@ -135,10 +179,22 @@ class vz_speech_recog:
             time.sleep(.5)
 
         speech_recognizer.stop_continuous_recognition()
+
+        # with open('data.json', 'a') as fp:
+        #     fp.write("[]]")
+
         return speech_recognizer
         # </SpeechContinuousRecognitionWithFile>
 
+    def end_transcript(self, istr):
+        print("ending transcipt - SESSION STOPPED OR CANCELLED")
+        # truncate_utf8_chars('data.json', 1)
+
+        # with open('data.json', 'a') as fp:
+        #     fp.write("]")
+
     def save_transcript(self, istr):
+        print("saving transcipt")
 
 #         try:
 #             text_file = open("sample.txt", "a")
@@ -162,6 +218,22 @@ class vz_speech_recog:
 #         print(curmax)
         self.jrds.append(jrd)
         self.best_lexs.append(curmax)
+
+        o = self.create_output()
+
+        truncate_utf8_chars('data.json', 1) #remove the ending ]
+
+        with open('data.json', 'a') as fp:
+            fp.write(",") #add the comma before the next list conent
+
+            fp.write(json.dumps(o).strip('[').strip(']')) #add the list content
+
+            fp.write("]") #end the list
+
+            
+
+        self.jrds = []
+        self.best_lexs = []
 
     def create_output(self):
         # assert(len(lex_words) == len(words_and_offsets))
@@ -188,12 +260,12 @@ class vz_speech_recog:
             nlp = spacy.load('en_core_web_sm')
             nlp.add_pipe("spacytextblob")
             doc = nlp(sentiq)
-            print(sentiq, doc._.polarity, doc._.subjectivity)
+            # print(sentiq, doc._.polarity, doc._.subjectivity)
             for phraseassign in doc._.assessments:
                 # print(phraseassign)
                 for wordassign in phraseassign[0]:
                     idx = lineiq['Words'].index(wordassign) + lineiq['start_index']
-                    print(wordassign, phraseassign[1], idx)
+                    # print(wordassign, phraseassign[1], idx)
                     mid_output[idx]['Polarity'] = phraseassign[1]
                     mid_output[idx]['Subjective'] = phraseassign[2]
 
