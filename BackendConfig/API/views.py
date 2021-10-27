@@ -36,7 +36,7 @@ class TranscriptView(views.APIView):
         except KeyError:
             return Response("transcript_bucket_id or transcript_file_id not found in request body", status=400)
         except Exception as e:
-            return Response("failed to get transcript: " + str(e) + " " + str(type(e).__name___), status=400)
+            return Response("failed to get transcript: " + str(e) + " " + str(type(e)), status=400)
 
 
 class UserViewSet(viewsets.ModelViewSet):
