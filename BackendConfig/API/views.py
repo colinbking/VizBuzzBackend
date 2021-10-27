@@ -23,7 +23,7 @@ class TranscriptView(views.APIView):
         # data = request.data
         try:
             json_data = json.loads(request.body)
-            transcript_bucket_id=json_data['transcript_bucket_id'],
+            transcript_bucket_id=json_data['transcript_bucket_id']
             transcript_file_id=json_data['transcript_file_id']
             s3 = boto3.client('s3')
             transcript_json = s3.get_object(Bucket=transcript_bucket_id, Key=transcript_file_id)
@@ -88,6 +88,27 @@ class UserView(views.APIView):
             return Response("Request Format Incorrect: " + str(e), status=400)
         except Exception as e:
             return Response("Exception Occurred in trying to create new User: " + str(e), status=500)
+
+        return HttpResponseServerError("Server Error")
+
+
+
+class LoginView(views.APIView):
+
+    def get(self, request, format=None):
+        """
+        returns id of specific user
+        """
+        try:
+            json_data = json.loads(request.body)
+            req_id = json_data["username"]
+            queried_user = UserSerializer(User.objects.get(username=username))
+            return JsonResponse(queried_user.data)
+
+        except KeyError:
+            return Response("id key not found in request body", status=400)
+        except Exception as e:
+            return Response("failed to get User" + str(e), status=400)
 
         return HttpResponseServerError("Server Error")
 
