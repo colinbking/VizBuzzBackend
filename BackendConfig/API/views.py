@@ -13,7 +13,7 @@ def homePageView(request):
 
 class TranscriptView(views.APIView):
     def __init__(self):
-        super()
+        views.APIView.__init__(self)
         self.s3 = boto3.client('s3')
 
 
