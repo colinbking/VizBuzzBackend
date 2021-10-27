@@ -12,26 +12,28 @@ def homePageView(request):
 
 
 class TranscriptView(views.APIView):
-    # authentication_classes tbd
-    # permission_classes tbd
+    def __init__(self):
+        super()
+        self.s3 = boto3.client('s3')
 
     def get(self, request, format=None):
         """
         Return transcript metadata given podcast info.
         """
-        # uses internal django parser based on content-type header
-        # data = request.data
         try:
             json_data = json.loads(request.body)
-            transcript_bucket_id=json_data['transcript_bucket_id']
-            transcript_file_id=json_data['transcript_file_id']
-            s3 = boto3.client('s3')
-            return JsonResponse(json.loads(s3.get_object(Bucket=transcript_bucket_id, Key=transcript_file_id)['Body'].read()), safe=False, status=200)
+            if not json_data: # use url params
+                transcript_bucket_id = request.GET.get('transcript_bucket_id', None)
+                transcript_file_id = request.GET.get('transciprt_file_id', None)
+            else:
+                transcript_bucket_id=json_data['transcript_bucket_id']
+                transcript_file_id=json_data['transcript_file_id']
+            return JsonResponse(json.loads(self.s3.get_object(Bucket=transcript_bucket_id, Key=transcript_file_id)['Body'].read()), safe=False, status=200)
 
         except KeyError:
             return Response("transcript_bucket_id or transcript_file_id not found in request body", status=400)
         except Exception as e:
-            return Response("failed to get transcript" + str(e), status=400)
+            return Response("failed to get transcript: " + str(e), status=400)
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -107,7 +109,7 @@ class LoginView(views.APIView):
         except KeyError:
             return Response("id key not found in request body", status=400)
         except Exception as e:
-            return Response("failed to get User" + str(e), status=400)
+            return Response("failed to get User: " + str(e), status=400)
 
         return HttpResponseServerError("Server Error")
 
