@@ -100,7 +100,7 @@ class LoginView(views.APIView):
         """
         try:
             json_data = json.loads(request.body)
-            req_id = json_data["username"]
+            username = json_data["username"]
             queried_user = UserSerializer(User.objects.get(username=username))
             return JsonResponse(queried_user.data)
 
