@@ -12,9 +12,8 @@ def homePageView(request):
 
 
 class TranscriptView(views.APIView):
-    def __init__(self):
-        super()
-        self.s3 = boto3.client('s3')
+    # def __init__(self):
+    #     super()
 
     def get(self, request, format=None):
         """
@@ -24,10 +23,11 @@ class TranscriptView(views.APIView):
             json_data = json.loads(request.body)
             if not json_data: # use url params
                 transcript_bucket_id = request.GET.get('transcript_bucket_id', None)
-                transcript_file_id = request.GET.get('transciprt_file_id', None)
+                transcript_file_id = request.GET.get('transcript_file_id', None)
             else:
                 transcript_bucket_id=json_data['transcript_bucket_id']
                 transcript_file_id=json_data['transcript_file_id']
+                self.s3 = boto3.client('s3')
             return JsonResponse(json.loads(self.s3.get_object(Bucket=transcript_bucket_id, Key=transcript_file_id)['Body'].read()), safe=False, status=200)
 
         except KeyError:
