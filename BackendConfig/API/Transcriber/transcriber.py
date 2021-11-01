@@ -8,6 +8,7 @@ from functools import reduce
 import spacy
 from spacytextblob.spacytextblob import SpacyTextBlob
 import azure.cognitiveservices.speech as speechsdk
+from azure.cognitiveservices.speech import SpeechRecognitionEventArgs
 import pyAudioAnalysis.audioBasicIO as aio
 import shutil
 import wave
@@ -25,7 +26,7 @@ def add_key(d, k, v, i):
     d['Index'] = i
     return d
 
-def truncate_utf8_chars(filename, count, ignore_newlines=True):
+def truncate_utf8_chars(filename: str, count: int, ignore_newlines:bool=True):
     """
     Truncates last `count` characters of a text file encoded in UTF-8.
     :param filename: The path to the text file to read
@@ -67,26 +68,26 @@ class Transcriber():
         print("connecting to s3 using boto3")
         self.s3 = boto3.client('s3')
 
-    def transcribe(self, bucket, key):
-        print("transcribing audio file with key: ", key)
+    def transcribe(self, bucket:str, key:str):
+        # print("transcribing audio file with key: ", key)
         # s3 = boto3.client('s3')
         # response = s3.get_object(Bucket=bucket, Key=key)
         # print("CONTENT TYPE: " + response['ContentType'])
         vzsr = vz_speech_recog()
-        vzsr.speech_recognize_continuous_from_file("The_smoking_tire_daniel_osborne.wav");
-        output_format = vzsr.create_output()
-        print(output_format)
-        ## what do i do now with this output format?
+        vzsr.convert_folder('wavs', 'out_wavs');
+        vzsr.speech_recognition_with_push_stream("out_wavs/test.wav")
+        new_output = add_pitch_to_output(plot = False)
+        
         return True
 
 class vz_speech_recog:
-    def __init__(self, save_file = "data.json"):
+    def __init__(self, save_file:str = "data.json"):
         self.best_lexs = []
         self.jrds = []
         if os.path.exists(save_file):
             os.remove(save_file)
 
-    def convert_folder(self, input_folder_path, output_folder_path):
+    def convert_folder(self, input_folder_path:str, output_folder_path:str):
 
         o = aio.convert_dir_fs_wav_to_wav(input_folder_path, 16000, 1)
         if os.path.exists(output_folder_path):
@@ -98,7 +99,7 @@ class vz_speech_recog:
 
         # rename input_folder_path + os.sep + "Fs" + str(16000) +  "_" + "NC" + str(1) to 
 
-    def speech_recognition_with_push_stream(self, filename):
+    def speech_recognition_with_push_stream(self, filename:str):
 
         with open('data.json', 'a') as fp:
             fp.write("[ {\"Word\": \"VZBHEADERPLZIGNORE\"} [")
@@ -147,7 +148,7 @@ class vz_speech_recog:
             speech_recognizer.stop_continuous_recognition()
        
 
-    def speech_recognize_continuous_from_file(self, filename):
+    def speech_recognize_continuous_from_file(self, filename:str):
 
         # with open('data.json', 'a') as fp:
         #     fp.write("[")
@@ -193,14 +194,14 @@ class vz_speech_recog:
         return speech_recognizer
         # </SpeechContinuousRecognitionWithFile>
 
-    def end_transcript(self, istr):
+    def end_transcript(self, istr:SpeechRecognitionEventArgs):
         print("ending transcipt - SESSION STOPPED OR CANCELLED")
         # truncate_utf8_chars('data.json', 1)
 
         # with open('data.json', 'a') as fp:
         #     fp.write("]")
 
-    def save_transcript(self, istr):
+    def save_transcript(self, istr:SpeechRecognitionEventArgs):
         print("saving transcipt")
 
 #         try:

@@ -8,7 +8,10 @@ import wave
 
 frame_from_ns = lambda x: int((((x * 10**-4) / 1000) * 16000))
 
-def add_pitch_to_output(output_format, filename = "out_wavs/The_smoking_tire_daniel_osborne.wav", cut = 5, plot = False):
+def add_pitch_to_output(transcription_filename:str = "data.json", filename = "out_wavs/The_smoking_tire_daniel_osborne.wav", cut = None, plot = False):
+
+    with open(transcription_filename, 'r') as fp:
+        output_format = json.load(fp)
 
     rigged_format = wave.open(filename)
     rigged_format.rewind()
