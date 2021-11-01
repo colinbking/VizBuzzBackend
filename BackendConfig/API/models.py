@@ -22,7 +22,7 @@ class Podcast(models.Model):
     transcript_file_id = models.CharField(max_length=300)
     name = models.CharField(max_length=300)
     episode_number = models.IntegerField()
-    author = models.CharField(max_length=20)
+    author = models.CharField(max_length=200)
     publish_date = models.DateTimeField()
     rss_url = models.CharField(max_length=300)
     duration = models.IntegerField()
