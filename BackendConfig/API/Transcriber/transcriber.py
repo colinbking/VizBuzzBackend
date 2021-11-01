@@ -22,7 +22,7 @@ def add_key(d, k, v, i):
         d[k] = v * 1e-4
     else:
         d[k] = v
-    d['index'] = i
+    d['Index'] = i
     return d
 
 def truncate_utf8_chars(filename, count, ignore_newlines=True):
@@ -75,9 +75,11 @@ class Transcriber():
         return True
 
 class vz_speech_recog:
-    def __init__(self):
+    def __init__(self, save_file = "data.json"):
         self.best_lexs = []
         self.jrds = []
+        if os.path.exists(save_file):
+            os.remove(save_file)
 
     def convert_folder(self, input_folder_path, output_folder_path):
 
@@ -241,7 +243,7 @@ class vz_speech_recog:
         lex_words = addlambda([self.best_lexs[i]['Lexical'] for i in range(len(self.best_lexs))]).split(" ")
         self.lex_final = lex_words
         z = list(zip(words_and_offsets, lex_words))
-        mid_output = [add_key(z[zi][0], "display", z[zi][1], zi) for zi in range(len(z))]
+        mid_output = [add_key(z[zi][0], "Display", z[zi][1], zi) for zi in range(len(z))]
 
         final_chuncks = [{"Words": [], "start_index": 0}]
         curr_index = 0
