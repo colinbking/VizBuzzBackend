@@ -62,6 +62,11 @@ def truncate_utf8_chars(filename, count, ignore_newlines=True):
 class Transcriber():
     # given a s3 bucket and a key to a specific file, transcribes it and drops it to a
     # our transcript s3 bucket.
+
+    def __init__(self):
+        print("connecting to s3 using boto3")
+        self.s3 = boto3.client('s3')
+
     def transcribe(self, bucket, key):
         print("transcribing audio file with key: ", key)
         # s3 = boto3.client('s3')
