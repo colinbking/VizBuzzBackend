@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import time
 import json
 from functools import reduce
-# import boto3
+import boto3
 import spacy
 from spacytextblob.spacytextblob import SpacyTextBlob
 import azure.cognitiveservices.speech as speechsdk
@@ -69,14 +69,13 @@ class Transcriber():
 
     def transcribe(self, bucket, key):
         print("transcribing audio file with key: ", key)
-        # s3 = boto3.client('s3')
-        # response = s3.get_object(Bucket=bucket, Key=key)
-        # print("CONTENT TYPE: " + response['ContentType'])
+        s3 = boto3.client('s3')
+        s3.Bucket("vizbuzz-podcast-audio-files").download_file(key, "wavs/temp.wav")
         vzsr = vz_speech_recog()
-        vzsr.speech_recognize_continuous_from_file("The_smoking_tire_daniel_osborne.wav");
+        vzsr.speech_recognize_continuous_from_file("wavs/temp.wav");
         output_format = vzsr.create_output()
         print(output_format)
-        ## what do i do now with this output format?
+        s3.upload_file('new_data.json', env("TRANSCRIPT_BUCKET_NAME"), key + '.json')
         return True
 
 class vz_speech_recog:
