@@ -63,19 +63,18 @@ class Transcriber():
     # given a s3 bucket and a key to a specific file, transcribes it and drops it to a
     # our transcript s3 bucket.
 
-    def __init__(self):
+    def __init__(self, fetcher):
         print("connecting to s3 using boto3")
-        self.s3 = boto3.client('s3')
+        self.s3 = fetcher
 
     def transcribe(self, bucket, key):
         print("transcribing audio file with key: ", key)
-        s3 = boto3.client('s3')
-        s3.Bucket("vizbuzz-podcast-audio-files").download_file(key, "wavs/temp.wav")
+        self.s3.Bucket("vizbuzz-podcast-audio-files").download_file(key, "wavs/temp.wav")
         vzsr = vz_speech_recog()
         vzsr.speech_recognize_continuous_from_file("wavs/temp.wav");
         output_format = vzsr.create_output()
         print(output_format)
-        s3.upload_file('new_data.json', env("TRANSCRIPT_BUCKET_NAME"), key + '.json')
+        self.s3.upload_file('new_data.json', os.getenv("TRANSCRIPT_BUCKET_NAME"), key + '.json')
         return True
 
 class vz_speech_recog:
