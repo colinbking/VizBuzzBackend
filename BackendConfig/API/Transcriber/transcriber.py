@@ -6,16 +6,20 @@ import json
 from functools import reduce
 import boto3
 import spacy
-from spacytextblob.spacytextblob import SpacyTextBlob
-import azure.cognitiveservices.speech as speechsdk
 import pyAudioAnalysis.audioBasicIO as aio
 import shutil
 import wave
 
 load_dotenv()
 
-compresslambda = lambda x: [j for i in x for j in i]
-addlambda = lambda x: reduce(lambda a,b: a + " " + b, x)
+
+def compresslambda(x):
+    return [j for i in x for j in i]
+
+
+def addlambda(x):
+    return reduce(lambda a, b: a + " " + b, x)
+
 
 def add_key(d, k, v, i):
     if (k == "Offset" or k == "Duration"):
@@ -25,6 +29,7 @@ def add_key(d, k, v, i):
     d['index'] = i
     return d
 
+
 def truncate_utf8_chars(filename, count, ignore_newlines=True):
     """
     Truncates last `count` characters of a text file encoded in UTF-8.
@@ -33,8 +38,6 @@ def truncate_utf8_chars(filename, count, ignore_newlines=True):
     :param ignore_newlines: Set to true, if the newline character at the end of the file should be ignored
     """
     with open(filename, 'rb+') as f:
-        last_char = None
-
         size = os.fstat(f.fileno()).st_size
 
         offset = 1
@@ -59,6 +62,7 @@ def truncate_utf8_chars(filename, count, ignore_newlines=True):
                     return
             offset += 1
 
+
 class Transcriber():
     # given a s3 bucket and a key to a specific file, transcribes it and drops it to a
     # our transcript s3 bucket.
@@ -72,11 +76,12 @@ class Transcriber():
         s3 = boto3.client('s3')
         s3.Bucket("vizbuzz-podcast-audio-files").download_file(key, "wavs/temp.wav")
         vzsr = vz_speech_recog()
-        vzsr.speech_recognize_continuous_from_file("wavs/temp.wav");
+        vzsr.speech_recognize_continuous_from_file("wavs/temp.wav");  # noqa: E703
         output_format = vzsr.create_output()
         print(output_format)
-        s3.upload_file('new_data.json', env("TRANSCRIPT_BUCKET_NAME"), key + '.json')
+        s3.upload_file('new_data.json', env("TRANSCRIPT_BUCKET_NAME"), key + '.json')  # noqa: F821
         return True
+
 
 class vz_speech_recog:
     def __init__(self):
@@ -85,7 +90,7 @@ class vz_speech_recog:
 
     def convert_folder(self, input_folder_path, output_folder_path):
 
-        o = aio.convert_dir_fs_wav_to_wav(input_folder_path, 16000, 1)
+        aio.convert_dir_fs_wav_to_wav(input_folder_path, 16000, 1);  # noqa: E703
         if os.path.exists(output_folder_path):
             shutil.rmtree(output_folder_path)
         # print(os.path.exists(f"{input_folder_path}/Fs16000_NC1/"))
@@ -93,7 +98,7 @@ class vz_speech_recog:
         os.rename(f"{input_folder_path}/Fs16000_NC1/", output_folder_path)
         # shutil.rmtree(f"{input_folder_path}/Fs16000_NC1/")
 
-        # rename input_folder_path + os.sep + "Fs" + str(16000) +  "_" + "NC" + str(1) to 
+        # rename input_folder_path + os.sep + "Fs" + str(16000) +  "_" + "NC" + str(1) to
 
     def speech_recognition_with_push_stream(self, filename):
 
@@ -142,7 +147,6 @@ class vz_speech_recog:
             wav_fh.close()
             stream.close()
             speech_recognizer.stop_continuous_recognition()
-       
 
     def speech_recognize_continuous_from_file(self, filename):
 
@@ -214,27 +218,24 @@ class vz_speech_recog:
         curmax = {}
         curmaxcond = 0
         for jrdi in jrd['NBest']:
-    #         print(jrdi['Confidence'], curmaxcond)
             if jrdi['Confidence'] > curmaxcond:
                 curmaxcond = jrdi['Confidence']
                 curmax = jrdi
-                
+
 #         print(curmax)
         self.jrds.append(jrd)
         self.best_lexs.append(curmax)
 
         o = self.create_output()
 
-        truncate_utf8_chars('data.json', 1) #remove the ending ]
+        truncate_utf8_chars('data.json', 1)  # remove the ending ]
 
         with open('data.json', 'a') as fp:
-            fp.write(",") #add the comma before the next list conent
+            fp.write(",")  # add the comma before the next list conent
 
-            fp.write(json.dumps(o).strip('[').strip(']')) #add the list content
+            fp.write(json.dumps(o).strip('[').strip(']'))  # add the list content
 
-            fp.write("]") #end the list
-
-            
+            fp.write("]")  # end the list
 
         self.jrds = []
         self.best_lexs = []
@@ -260,7 +261,7 @@ class vz_speech_recog:
                 final_chuncks[curr_index]['Words'].append(w)
 
         for lineiq in final_chuncks:
-            sentiq = reduce(lambda a,b: a + " " + b, lineiq['Words'])
+            sentiq = reduce(lambda a, b: a + " " + b, lineiq['Words'])
             nlp = spacy.load('en_core_web_sm')
             nlp.add_pipe("spacytextblob")
             doc = nlp(sentiq)
