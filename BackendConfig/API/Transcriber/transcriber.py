@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 import time
 import json
 from functools import reduce
-import boto3
 import spacy
 import pyAudioAnalysis.audioBasicIO as aio
 import shutil
