@@ -8,6 +8,7 @@ from .Transcriber.transcriber import Transcriber
 import json
 import boto3
 
+
 def homePageView(request):
     return HttpResponse('Hello, World!')
 
@@ -16,7 +17,6 @@ class TranscriptView(views.APIView):
     def __init__(self):
         views.APIView.__init__(self)
         self.s3 = boto3.client('s3')
-
 
     def get(self, request, format=None):
         """
@@ -27,13 +27,21 @@ class TranscriptView(views.APIView):
             transcript_bucket_id = request.GET.get("transcript_bucket_id", None)
             transcript_file_id = request.GET.get("transcript_file_id", None)
             if transcript_bucket_id is not None and transcript_file_id is not None:
-                return JsonResponse(json.loads(self.s3.get_object(Bucket=transcript_bucket_id, Key=transcript_file_id)['Body'].read()), safe=False, status=200)
+                return JsonResponse(
+                    json.loads(self.s3.get_object(Bucket=transcript_bucket_id, Key=transcript_file_id)['Body'].read()),
+                    safe=False,
+                    status=200
+                )
 
             # else attempt json
             json_data = json.loads(request.body)
             transcript_bucket_id = json_data['transcript_bucket_id']
             transcript_file_id = json_data['transcript_file_id']
-            return JsonResponse(json.loads(self.s3.get_object(Bucket=transcript_bucket_id, Key=transcript_file_id)['Body'].read()), safe=False, status=200)
+            return JsonResponse(
+                json.loads(self.s3.get_object(Bucket=transcript_bucket_id, Key=transcript_file_id)['Body'].read()),
+                safe=False,
+                status=200
+            )
 
         except KeyError:
             return Response("transcript_bucket_id or transcript_file_id not found in request body", status=400)
@@ -96,7 +104,6 @@ class UserView(views.APIView):
             return Response("Exception Occurred in trying to create new User: " + str(e), status=500)
 
         return HttpResponseServerError("Server Error")
-
 
 
 class LoginView(views.APIView):
@@ -195,14 +202,15 @@ class AudioUploadView(views.APIView):
             metadata_file_name = audio_key.split(".")[0] + "json"
             metadata = self.s3Fetcher.fetchMetadata(metadata_file_name)
             
-            if self.transcriber.transcribe(bucket, audio_key):
+            transcription_file = self.transcriber.transcribe(bucket, audio_key)
+            if transcription_file:
                 # upon successful transcription, podcast object is created in DB.
                 podcast_object = Podcast(
                     id = metadata["id"],
                     audio_bucket_id = metadata["audio_bucket_id"],
                     audio_file_id = metadata["audio_file_id"],
                     transcript_bucket_id = metadata["transcript_bucket_id"],
-                    transcript_file_id = metadata["transcript_file_id"],
+                    transcript_file_id = transcription_file,
                     name = metadata["name"],
                     episode_number = metadata["episode_number"],
                     author = metadata["author"],
@@ -222,7 +230,7 @@ class AudioUploadView(views.APIView):
             return HttpResponseServerError(e)
         return HttpResponseServerError("unknown error")
 
-        
+
 # Simple Views, an alternative to ViewSets, require specific declaration for each action.
 class TestUploadDataView(views.APIView):
     # authentication_classes tbd
@@ -252,4 +260,3 @@ class TestUploadDataView(views.APIView):
             print("failed to upload audio data", e)
             return HttpResponseServerError(e)
         return HttpResponseServerError("unknown error")
-
