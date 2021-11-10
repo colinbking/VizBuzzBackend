@@ -6,8 +6,6 @@ import json
 from functools import reduce
 import boto3
 import spacy
-from spacytextblob.spacytextblob import SpacyTextBlob
-import azure.cognitiveservices.speech as speechsdk
 import pyAudioAnalysis.audioBasicIO as aio
 import shutil
 import wave
@@ -20,9 +18,18 @@ import torch
 
 load_dotenv()
 
-compresslambda = lambda x: [j for i in x for j in i]
-addlambda = lambda x: reduce(lambda a,b: a + " " + b, x)
-frame_from_ns = lambda x: int((((x * 10**-4) / 1000) * 16000))
+
+def compresslambda(x):
+    return [j for i in x for j in i]
+
+
+def addlambda(x):
+    return reduce(lambda a, b: a + " " + b, x)
+
+
+def frame_from_ns(x):
+    return int((((x * 10**-4) / 1000) * 16000))
+
 
 def add_key(d, k, v, i):
     if (k == "Offset" or k == "Duration"):
@@ -32,6 +39,7 @@ def add_key(d, k, v, i):
     d['index'] = i
     return d
 
+
 def truncate_utf8_chars(filename, count, ignore_newlines=True):
     """
     Truncates last `count` characters of a text file encoded in UTF-8.
@@ -40,8 +48,6 @@ def truncate_utf8_chars(filename, count, ignore_newlines=True):
     :param ignore_newlines: Set to true, if the newline character at the end of the file should be ignored
     """
     with open(filename, 'rb+') as f:
-        last_char = None
-
         size = os.fstat(f.fileno()).st_size
 
         offset = 1
@@ -66,6 +72,7 @@ def truncate_utf8_chars(filename, count, ignore_newlines=True):
                     return
             offset += 1
 
+
 class Transcriber():
     # given a s3 bucket and a key to a specific file, transcribes it and drops it to a
     # our transcript s3 bucket.
@@ -74,21 +81,19 @@ class Transcriber():
         print("connecting to s3 using boto3")
         self.s3 = boto3.client('s3')
 
-
     def transcribe(self, bucket, key):
-
-
         print("transcribing audio file with key: ", key)
         s3 = boto3.client('s3')
         s3.Bucket("vizbuzz-podcast-audio-files").download_file(key, "wavs/temp.wav")
         vzsr = vz_speech_recog()
-        vzsr.convert_folder('wavs', 'out_wavs');
-        vzsr.speech_recognize_continuous_from_file("out_wavs/temp.wav");
+        vzsr.convert_folder('wavs', 'out_wavs')
+        vzsr.speech_recognize_continuous_from_file("out_wavs/temp.wav")
         s3.upload_file('new_data.json', env("TRANSCRIPT_BUCKET_NAME"), key + '.json')
         return True
 
+
 class vz_speech_recog:
-    def __init__(self, filename = "out_wavs/test.wav"):
+    def __init__(self, filename="out_wavs/test.wav"):
         self.best_lexs = []
         self.jrds = []
 
@@ -102,11 +107,9 @@ class vz_speech_recog:
         self.rigged_format = wave.open(filename)
         self.rigged_format.rewind()
         self.last_o_d_global = 0
-        
 
     def convert_folder(self, input_folder_path, output_folder_path):
-
-        o = aio.convert_dir_fs_wav_to_wav(input_folder_path, 16000, 1)
+        aio.convert_dir_fs_wav_to_wav(input_folder_path, 16000, 1);  # noqa: E703
         if os.path.exists(output_folder_path):
             shutil.rmtree(output_folder_path)
         # print(os.path.exists(f"{input_folder_path}/Fs16000_NC1/"))
@@ -114,7 +117,7 @@ class vz_speech_recog:
         os.rename(f"{input_folder_path}/Fs16000_NC1/", output_folder_path)
         # shutil.rmtree(f"{input_folder_path}/Fs16000_NC1/")
 
-        # rename input_folder_path + os.sep + "Fs" + str(16000) +  "_" + "NC" + str(1) to 
+        # rename input_folder_path + os.sep + "Fs" + str(16000) +  "_" + "NC" + str(1) to
 
     def speech_recognition_with_push_stream(self, filename):
 
@@ -163,7 +166,6 @@ class vz_speech_recog:
             wav_fh.close()
             stream.close()
             speech_recognizer.stop_continuous_recognition()
-       
 
     def speech_recognize_continuous_from_file(self, filename):
 
@@ -235,38 +237,14 @@ class vz_speech_recog:
         curmax = {}
         curmaxcond = 0
         for jrdi in jrd['NBest']:
-    #         print(jrdi['Confidence'], curmaxcond)
             if jrdi['Confidence'] > curmaxcond:
                 curmaxcond = jrdi['Confidence']
                 curmax = jrdi
-                
+
 #         print(curmax)
         self.jrds.append(jrd)
         self.best_lexs.append(curmax)
-
         o = self.create_output()
-
-        # no = add_pitch_to_output(self, o, cut = None)
-
-        # truncate_utf8_chars('data.json', 1) #remove the ending ]
-
-        # # try:
-        # #     print(json.dumps(no))
-        # # except Exception as e:
-        # #     print(e)
-
-
-        # with open('data.json', 'a') as fp:
-        #     fp.write(",") #add the comma before the next list conent
-
-        #     # print(json.dumps(no).strip('[').strip(']'))
-
-        #     fp.write(json.dumps(no).strip('[').strip(']')) #add the list content
-
-        #     fp.write("]") #end the list
-
-            
-
         self.jrds = []
         self.best_lexs = []
         self.add_pitch_to_file(o)
@@ -274,18 +252,16 @@ class vz_speech_recog:
     def add_pitch_to_file(self, o):
         no = self.add_pitch_to_output(o)
 
-        truncate_utf8_chars('data.json', 1) #remove the ending ]
+        truncate_utf8_chars('data.json', 1)  # remove the ending ]
 
         with open('data.json', 'a') as fp:
-            fp.write(",") #add the comma before the next list conent
+            fp.write(",")  # add the comma before the next list conent
 
-            # print(json.dumps(no).strip('[').strip(']'))
+            fp.write(json.dumps(no).strip('[').strip(']'))  # add the list content
 
-            fp.write(json.dumps(no).strip('[').strip(']')) #add the list content
+            fp.write(json.dumps(o).strip('[').strip(']'))  # add the list content
 
-            fp.write("]") #end the list
-
-            
+            fp.write("]")  # end the list
 
         self.jrds = []
         self.best_lexs = []
@@ -311,7 +287,7 @@ class vz_speech_recog:
                 final_chuncks[curr_index]['Words'].append(w)
 
         for lineiq in final_chuncks:
-            sentiq = reduce(lambda a,b: a + " " + b, lineiq['Words'])
+            sentiq = reduce(lambda a, b: a + " " + b, lineiq['Words'])
             nlp = spacy.load('en_core_web_sm')
             nlp.add_pipe("spacytextblob")
             doc = nlp(sentiq)
@@ -320,17 +296,12 @@ class vz_speech_recog:
                 # print(phraseassign)
                 for wordassign in phraseassign[0]:
                     idx = lineiq['Words'].index(wordassign) + lineiq['start_index']
-                    # print(wordassign, phraseassign[1], idx)
                     mid_output[idx]['Polarity'] = phraseassign[1]
                     mid_output[idx]['Subjective'] = phraseassign[2]
 
         return mid_output
 
-
-    def add_pitch_to_output(self, output_format:dict, cut = None, plot = False):
-
-        # print("got here")
-
+    def add_pitch_to_output(self, output_format: dict, cut=None, plot=False):
         running_frame_count = 0
         avgs = []
 
@@ -338,21 +309,19 @@ class vz_speech_recog:
 
         if plot:
             rownum = int(((cut - 1) / 4) + 1)
-            pitchfig, axs = plt.subplots(rownum, 4, figsize = (20, rownum * 5))
+            pitchfig, axs = plt.subplots(rownum, 4, figsize=(20, rownum * 5))
 
         for idx, tes in enumerate(med_output):
 
             # print(f"removed {frame_from_ns(tes['Offset'])} frames")
             # print(f"removed {self.last_o_d_global} frames")
             _ = self.rigged_format.readframes(frame_from_ns(tes['Offset'] - self.last_o_d_global))
-            
+
             if idx > 800:
                 noise_output = wave.open(f'out_wavs/tst{idx}word.wav', 'w')
                 noise_output.setparams((1, 2, 16000, 4824898, 'NONE', 'not compressed'))
-            
-            frame_count = frame_from_ns (tes['Duration'])
+            frame_count = frame_from_ns(tes['Duration'])
             frames_to_process = self.rigged_format.readframes(frame_count)
-            # print(f"init silence {frame_from_ns(tes['Offset'] - self.last_o_d_global)} frames, {tes['display']} is {frame_count} frames, got {len(frames_to_process)} frames")
             frames = np.frombuffer(frames_to_process, np.int16)
             avgi = np.average(stats.tmean(np.abs(frames), (0, 500)))
             avgs.append(avgi)
@@ -366,17 +335,15 @@ class vz_speech_recog:
 
             # Compute pitch using first gpu
             pitch = torchcrepe.predict(audioload,
-                                    16000,
-                                    int(16000 / 200.),
-                                    fmin=50,
-                                    fmax=550,
-                                    model='tiny',
-                                    batch_size=2048)
+                                       16000,
+                                       int(16000 / 200.),
+                                       fmin=50,
+                                       fmax=550,
+                                       model='tiny',
+                                       batch_size=2048)
             np_pitch = pitch.numpy()[0]
             # print(f'input number {idx}, len of pitch {len(np_pitch)}')
-            # np_downsampled_pitch = signal.decimate(np_pitch, 6, axis = 0, zero_phase=True if len(np_pitch) > 27 else False)
-            # np_downsampled_pitch = signal.decimate(np_pitch, 10, axis = 0, ftype="fir" if len(np_pitch) < 27 else "iir")
-            np_downsampled_pitch = signal.decimate(np_pitch, 10, axis = 0, n = 1 if len(np_pitch) <= 27 else 8)
+            np_downsampled_pitch = signal.decimate(np_pitch, 10, axis=0, n=1 if len(np_pitch) <= 27 else 8)
 
             x = math.floor(running_frame_count / 4)
             y = running_frame_count % 4
@@ -384,13 +351,11 @@ class vz_speech_recog:
             med_output[idx]['pitch_vals'] = list(np_downsampled_pitch)
 
             if plot:
-                axs[x, y].plot(np_downsampled_pitch, c = 'b')
+                axs[x, y].plot(np_downsampled_pitch, c='b')
                 ax2 = axs[x, y].twiny()
                 # axs[x, y].scatter(np_downsampled_pitch, c = 'b')
-                ax2.plot(np_pitch, c = 'red')
-                axs[x, y].set_title(f"word: {tes['display']}, number of points: {len(np_pitch)} -> {len(np_downsampled_pitch)}")
-                # axs[x, y].set_ylims(250)
-            
+                ax2.plot(np_pitch, c='red')
+                axs[x, y].set_title(f"word: {tes['display']}, reduced to: {len(np_downsampled_pitch)}")
 
             running_frame_count += 1
             self.last_o_d_global = tes['Duration'] + tes['Offset']
