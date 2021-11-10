@@ -11,11 +11,18 @@ import azure.cognitiveservices.speech as speechsdk
 import pyAudioAnalysis.audioBasicIO as aio
 import shutil
 import wave
+import matplotlib.pyplot as plt
+import numpy as np
+import torchcrepe
+from scipy import stats, signal
+import math
+import torch
 
 load_dotenv()
 
 compresslambda = lambda x: [j for i in x for j in i]
 addlambda = lambda x: reduce(lambda a,b: a + " " + b, x)
+frame_from_ns = lambda x: int((((x * 10**-4) / 1000) * 16000))
 
 def add_key(d, k, v, i):
     if (k == "Offset" or k == "Duration"):
@@ -67,21 +74,35 @@ class Transcriber():
         print("connecting to s3 using boto3")
         self.s3 = boto3.client('s3')
 
+
     def transcribe(self, bucket, key):
+
+
         print("transcribing audio file with key: ", key)
         s3 = boto3.client('s3')
         s3.Bucket("vizbuzz-podcast-audio-files").download_file(key, "wavs/temp.wav")
         vzsr = vz_speech_recog()
-        vzsr.speech_recognize_continuous_from_file("wavs/temp.wav");
-        output_format = vzsr.create_output()
-        print(output_format)
+        vzsr.convert_folder('wavs', 'out_wavs');
+        vzsr.speech_recognize_continuous_from_file("out_wavs/temp.wav");
         s3.upload_file('new_data.json', env("TRANSCRIPT_BUCKET_NAME"), key + '.json')
         return True
 
 class vz_speech_recog:
-    def __init__(self):
+    def __init__(self, filename = "out_wavs/test.wav"):
         self.best_lexs = []
         self.jrds = []
+
+        if os.path.exists("data.json"):
+            os.remove("data.json")
+
+        self.start_stream(filename)
+        # self.os = []
+
+    def start_stream(self, filename):
+        self.rigged_format = wave.open(filename)
+        self.rigged_format.rewind()
+        self.last_o_d_global = 0
+        
 
     def convert_folder(self, input_folder_path, output_folder_path):
 
@@ -225,12 +246,42 @@ class vz_speech_recog:
 
         o = self.create_output()
 
+        # no = add_pitch_to_output(self, o, cut = None)
+
+        # truncate_utf8_chars('data.json', 1) #remove the ending ]
+
+        # # try:
+        # #     print(json.dumps(no))
+        # # except Exception as e:
+        # #     print(e)
+
+
+        # with open('data.json', 'a') as fp:
+        #     fp.write(",") #add the comma before the next list conent
+
+        #     # print(json.dumps(no).strip('[').strip(']'))
+
+        #     fp.write(json.dumps(no).strip('[').strip(']')) #add the list content
+
+        #     fp.write("]") #end the list
+
+            
+
+        self.jrds = []
+        self.best_lexs = []
+        self.add_pitch_to_file(o)
+
+    def add_pitch_to_file(self, o):
+        no = self.add_pitch_to_output(o)
+
         truncate_utf8_chars('data.json', 1) #remove the ending ]
 
         with open('data.json', 'a') as fp:
             fp.write(",") #add the comma before the next list conent
 
-            fp.write(json.dumps(o).strip('[').strip(']')) #add the list content
+            # print(json.dumps(no).strip('[').strip(']'))
+
+            fp.write(json.dumps(no).strip('[').strip(']')) #add the list content
 
             fp.write("]") #end the list
 
@@ -274,3 +325,78 @@ class vz_speech_recog:
                     mid_output[idx]['Subjective'] = phraseassign[2]
 
         return mid_output
+
+
+    def add_pitch_to_output(self, output_format:dict, cut = None, plot = False):
+
+        # print("got here")
+
+        running_frame_count = 0
+        avgs = []
+
+        med_output = output_format[:cut]
+
+        if plot:
+            rownum = int(((cut - 1) / 4) + 1)
+            pitchfig, axs = plt.subplots(rownum, 4, figsize = (20, rownum * 5))
+
+        for idx, tes in enumerate(med_output):
+
+            # print(f"removed {frame_from_ns(tes['Offset'])} frames")
+            # print(f"removed {self.last_o_d_global} frames")
+            _ = self.rigged_format.readframes(frame_from_ns(tes['Offset'] - self.last_o_d_global))
+            
+            if idx > 800:
+                noise_output = wave.open(f'out_wavs/tst{idx}word.wav', 'w')
+                noise_output.setparams((1, 2, 16000, 4824898, 'NONE', 'not compressed'))
+            
+            frame_count = frame_from_ns (tes['Duration'])
+            frames_to_process = self.rigged_format.readframes(frame_count)
+            # print(f"init silence {frame_from_ns(tes['Offset'] - self.last_o_d_global)} frames, {tes['display']} is {frame_count} frames, got {len(frames_to_process)} frames")
+            frames = np.frombuffer(frames_to_process, np.int16)
+            avgi = np.average(stats.tmean(np.abs(frames), (0, 500)))
+            avgs.append(avgi)
+
+            if idx > 800:
+                noise_output.writeframes(frames_to_process)
+                noise_output.close()
+
+            frames = frames.astype(np.float32) / np.iinfo(np.int16).max
+            audioload = torch.tensor(np.copy(frames))[None]
+
+            # Compute pitch using first gpu
+            pitch = torchcrepe.predict(audioload,
+                                    16000,
+                                    int(16000 / 200.),
+                                    fmin=50,
+                                    fmax=550,
+                                    model='tiny',
+                                    batch_size=2048)
+            np_pitch = pitch.numpy()[0]
+            # print(f'input number {idx}, len of pitch {len(np_pitch)}')
+            # np_downsampled_pitch = signal.decimate(np_pitch, 6, axis = 0, zero_phase=True if len(np_pitch) > 27 else False)
+            # np_downsampled_pitch = signal.decimate(np_pitch, 10, axis = 0, ftype="fir" if len(np_pitch) < 27 else "iir")
+            np_downsampled_pitch = signal.decimate(np_pitch, 10, axis = 0, n = 1 if len(np_pitch) <= 27 else 8)
+
+            x = math.floor(running_frame_count / 4)
+            y = running_frame_count % 4
+
+            med_output[idx]['pitch_vals'] = list(np_downsampled_pitch)
+
+            if plot:
+                axs[x, y].plot(np_downsampled_pitch, c = 'b')
+                ax2 = axs[x, y].twiny()
+                # axs[x, y].scatter(np_downsampled_pitch, c = 'b')
+                ax2.plot(np_pitch, c = 'red')
+                axs[x, y].set_title(f"word: {tes['display']}, number of points: {len(np_pitch)} -> {len(np_downsampled_pitch)}")
+                # axs[x, y].set_ylims(250)
+            
+
+            running_frame_count += 1
+            self.last_o_d_global = tes['Duration'] + tes['Offset']
+        if plot:
+            plt.savefig("test.png", facecolor='w')
+            plt.close()
+        # plt.show()
+
+        return med_output
