@@ -7,6 +7,7 @@ from .Fetcher import Fetcher
 from .Transcriber.transcriber import Transcriber
 import json
 import boto3
+import os
 
 
 def homePageView(request):
@@ -199,8 +200,8 @@ class AudioUploadView(views.APIView):
             audio_key = json_data["audio_key"]
 
             # get metadata json for the podcast object in db
-            metadata_file_name = audio_key.split(".")[0] + "json"
-            metadata = self.s3Fetcher.fetchMetadata(metadata_file_name)
+            metadata_file_name = audio_key.split(".")[0] + ".json"
+            metadata = self.s3Fetcher.fetchMetadata(metadata_file_name, os.getenv("AUDIO_BUCKET_NAME"), audio_key)
             
             transcription_file = self.transcriber.transcribe(bucket, audio_key)
             if transcription_file:

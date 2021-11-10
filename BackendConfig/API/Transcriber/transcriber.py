@@ -69,16 +69,16 @@ class Transcriber():
 
     def __init__(self, fetcher):
         print("connecting to s3 using boto3")
-        self.s3 = fetcher
+        self.fetcher = fetcher
 
     # returns transcription json name
     def transcribe(self, bucket, key):
         print("transcribing audio file with key: ", key)
-        self.s3.Bucket(os.getenv("AUDIO_BUCKET_NAME")).download_file(key, "wavs/temp.wav")
+        self.fetcher.s3.Bucket(os.getenv("AUDIO_BUCKET_NAME")).download_file(key, "wavs/temp.wav")
         vzsr = vz_speech_recog()
         vzsr.speech_recognize_continuous_from_file("wavs/temp.wav");  # noqa: E703
         output_format = vzsr.create_output()
-        self.s3.upload_file('new_data.json', os.getenv("TRANSCRIPT_BUCKET_NAME"), key + '.json')
+        self.fetcher.s3.upload_file('new_data.json', os.getenv("TRANSCRIPT_BUCKET_NAME"), key + '.json')
         return key + '.json'
 
 
