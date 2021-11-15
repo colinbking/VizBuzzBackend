@@ -37,9 +37,6 @@ jobs:
         DJANGO_SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
         RDS_PASSWORD: ${{secrets.RDS_PASSWORD}}
         RDS_HOST: ${{secrets.RDS_HOST}}
-        SPEECHKEY: ${{secrets.SPEECHKEY}}
-        TRANSCRIPT_BUCKET_NAME: ${{secrets.TRANSCRIPT_BUCKET_NAME}}
-        AUDIO_BUCKET_NAME: ${{secrets.AUDIO_BUCKET_NAME}}
     - name: Django Testing
       run: |
         cd BackendConfig
