@@ -22,6 +22,9 @@ jobs:
         pip install -r requirements.txt
         python -m textblob.download_corpora
         python -m spacy download en_core_web_sm
+    - name: Test
+      run: |
+        echo ${{ env.DJANGO_SECRET_KEY }}
     - name: Lint with flake8
       run: |
         pip install flake8
@@ -36,3 +39,4 @@ jobs:
       run: |
         cd BackendConfig
         python3 manage.py test
+    
