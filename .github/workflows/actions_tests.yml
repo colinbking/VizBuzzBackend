@@ -24,7 +24,10 @@ jobs:
         python -m spacy download en_core_web_sm
     - name: Test
       run: |
-        echo ${{ env.DJANGO_SECRET_KEY }}
+          echo "GH_REPO: $GH_REPO"
+      env:
+          GH_REPO: ${{ github.repository }}
+          DJANGO_SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
     - name: Lint with flake8
       run: |
         pip install flake8
@@ -35,6 +38,9 @@ jobs:
         cd BackendConfig
         coverage run manage.py test
         coverage report
+      env:
+        GH_REPO: ${{ github.repository }}
+        DJANGO_SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
     - name: Django Testing
       run: |
         cd BackendConfig
