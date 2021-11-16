@@ -37,6 +37,7 @@ jobs:
         DJANGO_SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
         RDS_PASSWORD: ${{secrets.RDS_PASSWORD}}
         RDS_HOST: ${{secrets.RDS_HOST}}
+        SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
     - name: Django Testing
       run: |
         cd BackendConfig
