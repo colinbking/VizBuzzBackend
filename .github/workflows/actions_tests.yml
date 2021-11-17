@@ -22,6 +22,12 @@ jobs:
         pip install -r requirements.txt
         python -m textblob.download_corpora
         python -m spacy download en_core_web_sm
+    - name: Test
+      run: |
+        echo ${{ secrets.HELLO }}
+        echo DUMMY_ENV
+      env:
+        DUMMY_ENV: ${{ secrets.HELLO }}
     - name: Lint with flake8
       run: |
         pip install flake8
@@ -37,7 +43,6 @@ jobs:
         DJANGO_SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
         RDS_PASSWORD: ${{secrets.RDS_PASSWORD}}
         RDS_HOST: ${{secrets.RDS_HOST}}
-        SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
     - name: Django Testing
       run: |
         cd BackendConfig
