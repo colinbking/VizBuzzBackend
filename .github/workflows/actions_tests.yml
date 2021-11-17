@@ -18,6 +18,7 @@ jobs:
         python-version: 3.
     - name: Test
       run: |
+        echo ${{ secrets.HELLO }}
         echo $DUMMY_ENV
       env:
         DUMMY_ENV: ${{ secrets.HELLO }}
