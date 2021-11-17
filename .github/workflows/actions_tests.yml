@@ -16,12 +16,18 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.
+    - name: Display local environment variable
+      env:
+        VERSION_PREFIX: MyPrefix
+      run: |
+        echo We can use a variable multiple time: $VERSION_PREFIX
+        echo inside a multi-line script: $VERSION_PREFIX
     - name: Test
+      env:
+        DUMMY_ENV: ${{ secrets.HELLO }}
       run: |
         echo ${{ secrets.HELLO }}
         echo $DUMMY_ENV
-      env:
-        DUMMY_ENV: ${{ secrets.HELLO }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
