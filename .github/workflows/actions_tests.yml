@@ -24,7 +24,7 @@ jobs:
         echo inside a multi-line script: $VERSION_PREFIX
     - name: Get dummy secret
       env:
-        HELLO: ${{ secrets.HELLO }}
+        HELLO: ${#secrets.HELLO}
       run: |
         echo import secret
         echo $HELLO
