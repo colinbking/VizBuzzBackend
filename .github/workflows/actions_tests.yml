@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - shell: bash
     - uses: actions/checkout@v2
     - name: Set up Python 3.7
       uses: actions/setup-python@v2
@@ -23,7 +22,8 @@ jobs:
       run: |
         echo We can use a variable multiple time: $VERSION_PREFIX
         echo inside a multi-line script: $VERSION_PREFIX
-    - name: Get dummy secret
+    - shell: bash
+      name: Get dummy secret
       env:
         HELLO: ${{ secrets.HELLO }}
       run: |
