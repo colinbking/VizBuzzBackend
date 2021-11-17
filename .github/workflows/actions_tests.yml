@@ -22,12 +22,12 @@ jobs:
       run: |
         echo We can use a variable multiple time: $VERSION_PREFIX
         echo inside a multi-line script: $VERSION_PREFIX
-    - name: Test
+    - name: Get dummy secret
       env:
-        DUMMY_ENV: ${{ secrets.HELLO }}
+        HELLO: ${{ secrets.HELLO }}
       run: |
-        echo ${{ secrets.HELLO }}
-        echo $DUMMY_ENV
+        echo import secret
+        echo $HELLO
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
