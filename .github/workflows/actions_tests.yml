@@ -25,7 +25,7 @@ jobs:
     - name: Test
       run: |
         echo ${{ secrets.HELLO }}
-        echo DUMMY_ENV
+        echo env.DUMMY_ENV
       env:
         DUMMY_ENV: ${{ secrets.HELLO }}
     - name: Lint with flake8
