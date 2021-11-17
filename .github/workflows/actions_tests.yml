@@ -24,11 +24,11 @@ jobs:
         echo inside a multi-line script: $VERSION_PREFIX
     - name: Get dummy secret
       env:
-        HELLO: ${#secrets.HELLO}
+        HELLO: ${{ secrets.HELLO }}
       run: |
         echo import secret
-        echo $HELLO
-        echo $HELLO
+        echo ${#HELLO}
+        echo ${{HELLO}}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
