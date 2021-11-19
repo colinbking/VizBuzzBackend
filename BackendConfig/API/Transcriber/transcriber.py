@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 import time
 import json
 from functools import reduce
-import spacy
 import pyAudioAnalysis.audioBasicIO as aio
 import shutil
 import wave
@@ -14,6 +13,9 @@ import torchcrepe
 from scipy import stats, signal
 import math
 import torch
+import copy
+import spacy
+from spacytextblob.spacytextblob import SpacyTextBlob #yes i know this isnt used its on purpose
 
 load_dotenv()
 
@@ -93,14 +95,16 @@ class Transcriber():
 
 class vz_speech_recog:
     def __init__(self, filename="out_wavs/test.wav"):
-        self.best_lexs = []
-        self.jrds = []
+        # self.best_lexs = []
+        # self.jrds = []
 
         if os.path.exists("data.json"):
             os.remove("data.json")
 
         self.start_stream(filename)
         # self.os = []
+        self.os = []
+        self.nos = []
 
     def start_stream(self, filename):
         self.rigged_format = wave.open(filename)
@@ -232,6 +236,7 @@ class vz_speech_recog:
 #         print("-------------------")
         jr = istr.result.properties[speechsdk.PropertyId.SpeechServiceResponse_JsonResult]
         jrd = json.loads(jr)
+        
 #         print("_________")
         curmax = {}
         curmaxcond = 0
@@ -241,15 +246,18 @@ class vz_speech_recog:
                 curmax = jrdi
 
 #         print(curmax)
-        self.jrds.append(jrd)
-        self.best_lexs.append(curmax)
-        o = self.create_output()
-        self.jrds = []
-        self.best_lexs = []
-        self.add_pitch_to_file(o)
+        # self.jrds.append(jrd)
+        # self.best_lexs.append(curmax)
+        o = self.create_output(curmax['Words'], curmax['Lexical'].split(" "))
+        self.os.append(o)
+        print("create output successfully")
+        no = self.add_pitch_to_file(o)
+        self.nos.append(no)
+        print("wrote to json successfully")
 
     def add_pitch_to_file(self, o):
         no = self.add_pitch_to_output(o)
+        print("added pitch successfully")
 
         truncate_utf8_chars('data.json', 1)  # remove the ending ]
 
@@ -258,17 +266,20 @@ class vz_speech_recog:
 
             fp.write(json.dumps(no).strip('[').strip(']'))  # add the list content
 
-            fp.write(json.dumps(o).strip('[').strip(']'))  # add the list content
+            # fp.write(json.dumps(o).strip('[').strip(']'))  # add the list content
 
             fp.write("]")  # end the list
 
-        self.jrds = []
-        self.best_lexs = []
+        return no
+        # self.jrds = []
+        # self.best_lexs = []
 
-    def create_output(self):
+    def create_output(self, words_and_offsets, lex_words):
         # assert(len(lex_words) == len(words_and_offsets))
-        words_and_offsets = compresslambda([self.best_lexs[i]['Words'] for i in range(len(self.best_lexs))])
-        lex_words = addlambda([self.best_lexs[i]['Lexical'] for i in range(len(self.best_lexs))]).split(" ")
+        # words_and_offsets = self.best_lexs[0]['Words']
+        # words_and_offsets = compresslambda([self.best_lexs[i]['Words'] for i in range(len(self.best_lexs))])
+        # lex_words = self.best_lexs[0]['Lexical'].split(" ")
+        # lex_words = addlambda([self.best_lexs[i]['Lexical'] for i in range(len(self.best_lexs))]).split(" ")
         self.lex_final = lex_words
         z = list(zip(words_and_offsets, lex_words))
         mid_output = [add_key(z[zi][0], "display", z[zi][1], zi) for zi in range(len(z))]
@@ -287,8 +298,12 @@ class vz_speech_recog:
 
         for lineiq in final_chuncks:
             sentiq = reduce(lambda a, b: a + " " + b, lineiq['Words'])
-            nlp = spacy.load('en_core_web_sm')
-            nlp.add_pipe("spacytextblob")
+            try:
+                nlp = spacy.load('en_core_web_sm')
+                nlp.add_pipe("spacytextblob")
+            except Exception as e:
+                print("try python -m spacy download en_core_web_sm")
+                print("EXCEPTION WITH NLP", e)
             doc = nlp(sentiq)
             # print(sentiq, doc._.polarity, doc._.subjectivity)
             for phraseassign in doc._.assessments:
@@ -304,7 +319,7 @@ class vz_speech_recog:
         running_frame_count = 0
         avgs = []
 
-        med_output = output_format[:cut]
+        med_output = copy.deepcopy(output_format[:cut])
 
         if plot:
             rownum = int(((cut - 1) / 4) + 1)
@@ -347,7 +362,7 @@ class vz_speech_recog:
             x = math.floor(running_frame_count / 4)
             y = running_frame_count % 4
 
-            med_output[idx]['pitch_vals'] = list(np_downsampled_pitch)
+            med_output[idx]['pitch_vals'] = list([float(i) for i in np_downsampled_pitch])
 
             if plot:
                 axs[x, y].plot(np_downsampled_pitch, c='b')
