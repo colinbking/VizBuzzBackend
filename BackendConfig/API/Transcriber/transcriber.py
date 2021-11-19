@@ -15,7 +15,7 @@ import math
 import torch
 import copy
 import spacy
-from spacytextblob.spacytextblob import SpacyTextBlob #yes i know this isnt used its on purpose
+from spacytextblob.spacytextblob import SpacyTextBlob  # yes i know this isnt used its on purpose
 
 load_dotenv()
 
@@ -236,7 +236,6 @@ class vz_speech_recog:
 #         print("-------------------")
         jr = istr.result.properties[speechsdk.PropertyId.SpeechServiceResponse_JsonResult]
         jrd = json.loads(jr)
-        
 #         print("_________")
         curmax = {}
         curmaxcond = 0
