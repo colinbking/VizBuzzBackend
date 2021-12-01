@@ -1,6 +1,6 @@
 import azure.cognitiveservices.speech as speechsdk
 import os
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 import time
 import json
 from functools import reduce
@@ -17,7 +17,7 @@ import copy
 import spacy
 from spacytextblob.spacytextblob import SpacyTextBlob  # noqa: F401
 
-load_dotenv()
+# load_dotenv()
 
 
 def compresslambda(x):
