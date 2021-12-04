@@ -16,8 +16,7 @@ import torch
 import copy
 import spacy
 from spacytextblob.spacytextblob import SpacyTextBlob  # yes i know this isnt used its on purpose
-import ffmpeg
-
+from miniaudio import IceCastClient
 load_dotenv()
 
 
@@ -88,10 +87,8 @@ class Transcriber():
         print("transcribing audio file with key: ", key)
         self.fetcher.s3.Bucket(os.getenv("AUDIO_BUCKET_NAME")).download_file(key, "wavs/temp.wav")
         vzsr = vz_speech_recog()
-        url = "https://cdn.simplecast.com/audio/bceb3f91-afbb-4f97-87f6-5f4387bbb382/episodes/b5d7ea27-3fe2-4b88-913f-7b37e67fb35e/audio/79a85e01-7fb2-49cf-8df8-632f290e468f/default_tc.mp3?aid=rss_feed&feed=c2RzTGta"
-        vzsr.download_file(url)
-        # vzsr.convert_folder('wavs', 'out_wavs')
-        vzsr.speech_recognize_continuous_from_file("out_wavs/test.wav")
+        vzsr.convert_folder('wavs', 'out_wavs')
+        vzsr.speech_recognize_continuous_from_file("out_wavs/temp.wav")
         self.fetcher.s3.upload_file('new_data.json', os.getenv("TRANSCRIPT_BUCKET_NAME"), key + '.json')
         return True
 
@@ -123,19 +120,12 @@ class vz_speech_recog:
         os.rename(f"{input_folder_path}/Fs16000_NC1/", output_folder_path)
         # shutil.rmtree(f"{input_folder_path}/Fs16000_NC1/")
 
-    def download_file(self, input_url, output_path = "out_wavs/test.wav"):
-        if os.path.exists(output_path):
-            os.remove(output_path)
-        audio_input = ffmpeg.input(input_url)
-        audio_output = ffmpeg.output(audio_input, output_path, ac = 1, ar=16000)
-        audio_output.run()
-
         # rename input_folder_path + os.sep + "Fs" + str(16000) +  "_" + "NC" + str(1) to
 
-    def speech_recognition_with_push_stream(self, filename):
+    def speech_recognition_with_push_stream(self):
 
-        with open('data.json', 'a') as fp:
-            fp.write("[ {\"Word\": \"VZBHEADERPLZIGNORE\"} [")
+        # with open('data.json', 'a') as fp:
+        #     fp.write("[ {\"Word\": \"VZBHEADERPLZIGNORE\"} [")
 
         # Specify the path to an audio file containing speech (mono WAV / PCM with a sampling rate of 16kHz).
 
@@ -159,7 +149,7 @@ class vz_speech_recog:
 
         # The number of bytes to push per buffer
         n_bytes = 3200
-        wav_fh = wave.open(filename)
+        wav_fh = IceCastClient("https://cdn.simplecast.com/audio/bceb3f91-afbb-4f97-87f6-5f4387bbb382/episodes/b5d7ea27-3fe2-4b88-913f-7b37e67fb35e/audio/79a85e01-7fb2-49cf-8df8-632f290e468f/default_tc.mp3?aid=rss_feed&feed=c2RzTGta")
 
         # start continuous speech recognition
         speech_recognizer.start_continuous_recognition()
@@ -167,7 +157,7 @@ class vz_speech_recog:
         # start pushing data until all data has been read from the file
         try:
             while(True):
-                frames = wav_fh.readframes(n_bytes // 2)
+                frames = wav_fh.read(n_bytes // 2)
                 # print('read {} bytes'.format(len(frames)))
                 if not frames:
                     break
@@ -246,23 +236,24 @@ class vz_speech_recog:
 #         print("-------------------")
         jr = istr.result.properties[speechsdk.PropertyId.SpeechServiceResponse_JsonResult]
         jrd = json.loads(jr)
-#         print("_________")
-        curmax = {}
-        curmaxcond = 0
-        for jrdi in jrd['NBest']:
-            if jrdi['Confidence'] > curmaxcond:
-                curmaxcond = jrdi['Confidence']
-                curmax = jrdi
+        print(jrd)
+# #         print("_________")
+#         curmax = {}
+#         curmaxcond = 0
+#         for jrdi in jrd['NBest']:
+#             if jrdi['Confidence'] > curmaxcond:
+#                 curmaxcond = jrdi['Confidence']
+#                 curmax = jrdi
 
-#         print(curmax)
-        # self.jrds.append(jrd)
-        # self.best_lexs.append(curmax)
-        o = self.create_output(curmax['Words'], curmax['Lexical'].split(" "))
-        self.os.append(o)
-        print("create output successfully")
-        no = self.add_pitch_to_file(o)
-        self.nos.append(no)
-        print("wrote to json successfully")
+# #         print(curmax)
+#         # self.jrds.append(jrd)
+#         # self.best_lexs.append(curmax)
+#         o = self.create_output(curmax['Words'], curmax['Lexical'].split(" "))
+#         self.os.append(o)
+#         print("create output successfully")
+#         no = self.add_pitch_to_file(o)
+#         self.nos.append(no)
+#         print("wrote to json successfully")
 
     def add_pitch_to_file(self, o):
         no = self.add_pitch_to_output(o)
