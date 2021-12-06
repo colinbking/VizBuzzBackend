@@ -184,52 +184,57 @@ class AudioUploadView(views.APIView):
     def __init__(self):
         self.s3Fetcher = Fetcher()
         self.transcriber = Transcriber(self.s3Fetcher)
-        
+
+    def transcribe_bucket_and_key(self, bucket, audio_key):
+        # get metadata json for the podcast object in db
+        metadata_file_name = audio_key.split(".")[0] + ".json"
+        metadata = self.s3Fetcher.fetchMetadata(metadata_file_name, os.getenv("AUDIO_BUCKET_NAME"), audio_key)
+
+        transcription_file = self.transcriber.transcribe(bucket, audio_key)
+        if transcription_file:
+            # upon successful transcription, podcast object is created in DB.
+            podcast_object = Podcast(
+                id=metadata["id"],
+                audio_bucket_id=metadata["audio_bucket_id"],
+                audio_file_id=metadata["audio_file_id"],
+                transcript_bucket_id=metadata["transcript_bucket_id"],
+                transcript_file_id=transcription_file,
+                name=metadata["name"],
+                episode_number=metadata["episode_number"],
+                author=metadata["author"],
+                publish_date=metadata["publish_date"],
+                rss_url=metadata["rss_url"],
+                duration=metadata["duration"]
+            )
+
+            podcast_object.save()
+            return JsonResponse({"podcast_id": metadata["id"]})
+    
+    def transcribe_url(self, url):
+        return JsonResponse({"url": url})
 
     def post(self, request, format=None):
         """
-        Accepts bucket and key identifier for an audio file and transcribes it
+        Transcribes an audio file given either
+            1. bucket and key
+            2. streaming url
         """
         # uses internal django parser based on content-type header
         # data = request.data
 
         json_data = json.loads(request.body)
 
-        try:
+        if "audio_bucket" in json_data and "audio_key" in json_data:
             bucket = json_data["audio_bucket"]
             audio_key = json_data["audio_key"]
-
-            # get metadata json for the podcast object in db
-            metadata_file_name = audio_key.split(".")[0] + ".json"
-            metadata = self.s3Fetcher.fetchMetadata(metadata_file_name, os.getenv("AUDIO_BUCKET_NAME"), audio_key)
-            
-            transcription_file = self.transcriber.transcribe(bucket, audio_key)
-            if transcription_file:
-                # upon successful transcription, podcast object is created in DB.
-                podcast_object = Podcast(
-                    id = metadata["id"],
-                    audio_bucket_id = metadata["audio_bucket_id"],
-                    audio_file_id = metadata["audio_file_id"],
-                    transcript_bucket_id = metadata["transcript_bucket_id"],
-                    transcript_file_id = transcription_file,
-                    name = metadata["name"],
-                    episode_number = metadata["episode_number"],
-                    author = metadata["author"],
-                    publish_date = metadata["publish_date"],
-                    rss_url = metadata["rss_url"],
-                    duration = metadata["duration"]
-                )
-
-                podcast_object.save()
-                return JsonResponse({"podcast_id": metadata["id"]})
-
-        except KeyError as e:
-            print(e)
-            return HttpResponseServerError(e)
-        except Exception as e:
-            print("failed to transcribe audio file with key: ", audio_key, e)
-            return HttpResponseServerError(e)
-        return HttpResponseServerError("unknown error")
+            try:
+                return self.transcribe_bucket_and_key(bucket, audio_key)
+            except Exception as e:
+                return HttpResponseServerError(e)
+        elif "streaming_url" in json_data:
+            return self.transcribe_url(json_data["streaming_url"])
+        else:
+            return HttpResponseServerError("Error: unknown keys")
 
 
 # Simple Views, an alternative to ViewSets, require specific declaration for each action.
