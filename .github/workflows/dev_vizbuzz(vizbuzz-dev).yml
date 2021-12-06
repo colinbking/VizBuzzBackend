@@ -30,6 +30,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements.txt
+          export LD_LIBRARY_PATH="/usr/lib/x86_64-linux-gnu/:$LD_LIBRARY_PATH"
           python -m textblob.download_corpora
           python -m spacy download en_core_web_sm
           sudo apt-get install libsndfile1
