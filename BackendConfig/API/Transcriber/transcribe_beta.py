@@ -15,7 +15,7 @@ import math
 import torch
 import copy
 import spacy
-from spacytextblob.spacytextblob import SpacyTextBlob  # yes i know this isnt used its on purpose
+from spacytextblob.spacytextblob import SpacyTextBlob  # noqa: F401
 from miniaudio import IceCastClient
 load_dotenv()
 
@@ -149,7 +149,10 @@ class vz_speech_recog:
 
         # The number of bytes to push per buffer
         n_bytes = 3200
-        wav_fh = IceCastClient("https://cdn.simplecast.com/audio/bceb3f91-afbb-4f97-87f6-5f4387bbb382/episodes/b5d7ea27-3fe2-4b88-913f-7b37e67fb35e/audio/79a85e01-7fb2-49cf-8df8-632f290e468f/default_tc.mp3?aid=rss_feed&feed=c2RzTGta")
+        url = "https://cdn.simplecast.com/audio/bceb3f91-afbb-4f97-87f6-5f4387bbb382/" + \
+              "episodes/b5d7ea27-3fe2-4b88-913f-7b37e67fb35e/audio/79a85e01-7fb2-49cf-8df8-632f290e468f/" + \
+              "default_tc.mp3?aid=rss_feed&feed=c2RzTGta"
+        wav_fh = IceCastClient(url)
 
         # start continuous speech recognition
         speech_recognizer.start_continuous_recognition()
@@ -380,17 +383,18 @@ class vz_speech_recog:
 
         return med_output
 
+
 def test_pitch(frames_to_process):
     frames = np.frombuffer(frames_to_process, np.int16)
     frames = frames.astype(np.float32) / np.iinfo(np.int16).max
     audioload = torch.tensor(np.copy(frames))[None]
     pitch = torchcrepe.predict(audioload,
-                                        16000,
-                                        int(16000 / 200.),
-                                        fmin=50,
-                                        fmax=550,
-                                        model='tiny',
-                                        batch_size=2048)
+                               16000,
+                               int(16000 / 200.),
+                               fmin=50,
+                               fmax=550,
+                               model='tiny',
+                               batch_size=2048)
     np_pitch = pitch.numpy()[0]
     np_downsampled_pitch = signal.decimate(np_pitch, 10, axis=0, n=1 if len(np_pitch) <= 27 else 8)
     return np_downsampled_pitch

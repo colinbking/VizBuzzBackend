@@ -209,7 +209,7 @@ class AudioUploadView(views.APIView):
 
             podcast_object.save()
             return JsonResponse({"podcast_id": metadata["id"]})
-    
+
     def transcribe_url(self, url):
         return JsonResponse({"url": url})
 
