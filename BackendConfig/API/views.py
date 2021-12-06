@@ -7,6 +7,7 @@ from .Fetcher import Fetcher
 from .transcriber import Transcriber
 import json
 import boto3
+import uuid
 import os
 
 
@@ -185,35 +186,54 @@ class AudioUploadView(views.APIView):
         self.s3Fetcher = Fetcher()
         self.transcriber = Transcriber(self.s3Fetcher)
 
-    def transcribe_bucket_and_key(self, bucket, audio_key):
-        # get metadata json for the podcast object in db
-        metadata_file_name = audio_key.split(".")[0] + ".json"
-        metadata = self.s3Fetcher.fetchMetadata(metadata_file_name, os.getenv("AUDIO_BUCKET_NAME"), audio_key)
+    # upon successful transcription, called to create podcast object in DB.
+    def save_podcast_to_db(self, metadata, transcribed_data_filename):
+        new_id = uuid.uuid4()
+        podcast_object = Podcast(
+            id=new_id,
+            audio_bucket_id=metadata["audio_bucket_id"],
+            audio_file_id=metadata["audio_file_id"],
+            transcript_bucket_id=metadata["transcript_bucket_id"],
+            transcript_file_id=transcribed_data_filename,
+            name=metadata["name"],
+            episode_number=metadata["episode_number"],
+            author=metadata["author"],
+            publish_date=metadata["publish_date"],
+            rss_url=metadata["rss_url"],
+            duration=metadata["duration"]
+        )
 
-        transcription_file = self.transcriber.transcribe(bucket, audio_key)
+        podcast_object.save()
+        return str(new_id)
+        
+
+    # triggers transcriber to transcribe a podcast from our s3 bucket
+    def transcribe_from_bucket_and_key(self, bucket, audio_key, metadata):
+        new_file_name = audio_key + ".json"
+        transcription_file = self.transcriber.transcribe_from_s3(bucket, audio_key, new_file_name)
         if transcription_file:
-            # upon successful transcription, podcast object is created in DB.
-            podcast_object = Podcast(
-                id=metadata["id"],
-                audio_bucket_id=metadata["audio_bucket_id"],
-                audio_file_id=metadata["audio_file_id"],
-                transcript_bucket_id=metadata["transcript_bucket_id"],
-                transcript_file_id=transcription_file,
-                name=metadata["name"],
-                episode_number=metadata["episode_number"],
-                author=metadata["author"],
-                publish_date=metadata["publish_date"],
-                rss_url=metadata["rss_url"],
-                duration=metadata["duration"]
-            )
+            new_id = self.save_podcast_to_db(metadata, new_file_name)
+            return JsonResponse({"saved podcast id": new_id})
+        return HttpResponseServerError("Error: Transcription of file with rss url=" + metadata["rss_url"] + " failed")
 
-            podcast_object.save()
-            return JsonResponse({"podcast_id": metadata["id"]})
+        
+    # triggers transcriber to transcribe a podcast from a streaming url
+    def transcribe_from_url(self, metadata):
+        transcription_file = self.transcriber.transcribe_from_streaming_url(metadata["streaming_url"])
+        new_file_name = metadata["name"] + str(metadata["episode_number"]) +  ".json"
+        if transcription_file:
+            try:
+                self.s3Fetcher.upload_file("data.json", os.getenv('TRANSCRIPT_BUCKET_NAME'), new_file_name)
+            except Exception as e:
+                return HttpResponseServerError("Error: upload of json metadata file for podcast with rss_url=" + metadata["rss_url"] + " failed" + str(e))
+            
+            new_id = self.save_podcast_to_db(metadata, new_file_name)
+            return JsonResponse({"saved podcast id": new_id})
 
-    def transcribe_url(self, url):
-        return JsonResponse({"url": url})
+        return HttpResponseServerError("Error: Transcription of file with rss url=" + metadata["rss_url"] + " failed")
 
     def post(self, request, format=None):
+
         """
         Transcribes an audio file given either
             1. bucket and key
@@ -222,17 +242,19 @@ class AudioUploadView(views.APIView):
         # uses internal django parser based on content-type header
         # data = request.data
 
-        json_data = json.loads(request.body)
-
-        if "audio_bucket" in json_data and "audio_key" in json_data:
-            bucket = json_data["audio_bucket"]
-            audio_key = json_data["audio_key"]
+        podcast_metadata = json.loads(request.body)
+        
+        # if grabbing a wav file from s3
+        if "audio_bucket" in podcast_metadata and "audio_key" in podcast_metadata:
+            bucket = podcast_metadata["audio_bucket"]
+            audio_key = podcast_metadata["audio_key"]
             try:
-                return self.transcribe_bucket_and_key(bucket, audio_key)
+                return self.transcribe_from_bucket_and_key(bucket, audio_key, podcast_metadata)
             except Exception as e:
                 return HttpResponseServerError(e)
-        elif "streaming_url" in json_data:
-            return self.transcribe_url(json_data["streaming_url"])
+        # if streaming_url is supplied in the metadata, transcribe directly from streaming url
+        elif "streaming_url" in podcast_metadata:
+            return self.transcribe_from_url(podcast_metadata)
         else:
             return HttpResponseServerError("Error: unknown keys")
 
