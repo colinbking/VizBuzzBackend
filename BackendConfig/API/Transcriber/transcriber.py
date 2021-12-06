@@ -95,6 +95,26 @@ class Transcriber():
         self.fetcher.s3.upload_file('new_data.json', os.getenv("TRANSCRIPT_BUCKET_NAME"), key + '.json')
         return True
 
+    # to be used when there is a url to be downloaded from a file
+    def transcribe_from_url(self, url = None):
+        if url is None:
+            url = "https://cdn.simplecast.com/audio/bceb3f91-afbb-4f97-87f6-5f4387bbb382/episodes/b5d7ea27-3fe2-4b88-913f-7b37e67fb35e/audio/79a85e01-7fb2-49cf-8df8-632f290e468f/default_tc.mp3?aid=rss_feed&feed=c2RzTGta"
+        vzsr = vz_speech_recog() 
+        vzsr.download_file(url)
+        vzsr.speech_recognize_continuous_from_file("out_wavs/test.wav")
+        # self.fetcher.s3.upload_file('new_data.json', os.getenv("TRANSCRIPT_BUCKET_NAME"), key + '.json')
+        return True
+
+    # to be used when there is a file called temp.wav in the folder called wavs
+    def transcribe_from_file(self):
+        vzsr = vz_speech_recog()
+        vzsr.convert_folder('wavs', 'out_wavs')
+        vzsr.speech_recognize_continuous_from_file("out_wavs/test.wav")
+        return True
+    
+    def upload_to_aws(self, bucket, key):
+        self.fetcher.s3.upload_file('data.json', os.getenv("TRANSCRIPT_BUCKET_NAME"), key + '.json')
+
 
 class vz_speech_recog:
     def __init__(self, filename="out_wavs/test.wav"):
