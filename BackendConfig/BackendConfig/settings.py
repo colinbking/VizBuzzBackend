@@ -29,10 +29,10 @@ SECRET_KEY = env('DJANGO_SECRET_KEY')
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'vizbuzz-backend.herokuapp.com',
-    'vizbuzz-backend-dev.herokuapp.com',
-    'localhost',
-    '127.0.0.1'
+   'vizbuzz-backend.herokuapp.com',
+   'vizbuzz-backend-dev.herokuapp.com',
+   'localhost',
+   '127.0.0.1'
 ]
 
 
