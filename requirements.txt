@@ -1,3 +1,4 @@
+-f https://download.pytorch.org/whl/cpu/torch_stable.html
 appdirs==1.4.4
 appnope==0.1.2
 argon2-cffi==21.1.0
@@ -128,3 +129,5 @@ wcwidth==0.2.5
 webencodings==0.5.1
 whitenoise==5.3.0
 widgetsnbextension==3.5.1
+torch==1.10.0+cpu
+torchcrepe==0.0.15
