@@ -33,6 +33,7 @@ jobs:
           python -m textblob.download_corpora
           python -m spacy download en_core_web_sm
           sudo apt-get install libsndfile1
+          pip install torch==1.10.0+cpu torchcrepe -f https://download.pytorch.org/whl/cpu/torch_stable.html
         
       # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
       
