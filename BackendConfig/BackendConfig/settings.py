@@ -31,6 +31,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'vizbuzz-backend.herokuapp.com',
     'vizbuzz-backend-dev.herokuapp.com',
+    'https://vizbuzz.azurewebsites.net',
     'localhost',
     '127.0.0.1'
 ]
