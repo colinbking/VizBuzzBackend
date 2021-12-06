@@ -124,7 +124,6 @@ class vz_speech_recog:
         if os.path.exists("data.json"):
             os.remove("data.json")
 
-        self.start_stream(filename)
         # self.os = []
         self.os = []
         self.nos = []
@@ -204,6 +203,8 @@ class vz_speech_recog:
 
         # with open('data.json', 'a') as fp:
         #     fp.write("[")
+
+        self.start_stream(filename)
 
         """performs continuous speech recognition with input from an audio file"""
 
