@@ -3,7 +3,7 @@ name: Backend Tests
 on:
   push:
     branches:
-      - dev
+      - dev_beta
 
 jobs:
   build:
