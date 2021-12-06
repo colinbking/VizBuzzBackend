@@ -35,6 +35,8 @@ DEBUG = True
 #    'localhost',
 #    '127.0.0.1'
 #]
+
+# temp fix
 ALLOWED_HOSTS = ['*']
 
 
