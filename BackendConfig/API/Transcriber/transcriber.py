@@ -83,25 +83,13 @@ class Transcriber():
         print("connecting to s3 using boto3")
         self.fetcher = fetcher
 
-    # returns transcription json name
-    def transcribe(self, bucket, key):
-        print("transcribing audio file with key: ", key)
-        self.fetcher.s3.Bucket(os.getenv("AUDIO_BUCKET_NAME")).download_file(key, "wavs/temp.wav")
-        vzsr = vz_speech_recog()
-        url = "https://cdn.simplecast.com/audio/bceb3f91-afbb-4f97-87f6-5f4387bbb382/episodes/b5d7ea27-3fe2-4b88-913f-7b37e67fb35e/audio/79a85e01-7fb2-49cf-8df8-632f290e468f/default_tc.mp3?aid=rss_feed&feed=c2RzTGta"
-        vzsr.download_file(url)
-        # vzsr.convert_folder('wavs', 'out_wavs')
-        vzsr.speech_recognize_continuous_from_file("out_wavs/test.wav")
-        self.fetcher.s3.upload_file('new_data.json', os.getenv("TRANSCRIPT_BUCKET_NAME"), key + '.json')
-        return True
-
     # to be used when there is a url to be downloaded from a file
     def transcribe_from_url(self, url = None):
         if url is None:
             url = "https://cdn.simplecast.com/audio/bceb3f91-afbb-4f97-87f6-5f4387bbb382/episodes/b5d7ea27-3fe2-4b88-913f-7b37e67fb35e/audio/79a85e01-7fb2-49cf-8df8-632f290e468f/default_tc.mp3?aid=rss_feed&feed=c2RzTGta"
         vzsr = vz_speech_recog() 
         vzsr.download_file(url)
-        vzsr.speech_recognize_continuous_from_file("out_wavs/test.wav")
+        vzsr.speech_recognition_with_push_stream("out_wavs/test.wav")
         # self.fetcher.s3.upload_file('new_data.json', os.getenv("TRANSCRIPT_BUCKET_NAME"), key + '.json')
         return True
 
@@ -109,7 +97,7 @@ class Transcriber():
     def transcribe_from_file(self):
         vzsr = vz_speech_recog()
         vzsr.convert_folder('wavs', 'out_wavs')
-        vzsr.speech_recognize_continuous_from_file("out_wavs/test.wav")
+        vzsr.speech_recognition_with_push_stream("out_wavs/test.wav")
         return True
     
     def upload_to_aws(self, bucket, key):
@@ -152,6 +140,8 @@ class vz_speech_recog:
         # rename input_folder_path + os.sep + "Fs" + str(16000) +  "_" + "NC" + str(1) to
 
     def speech_recognition_with_push_stream(self, filename):
+
+        self.start_stream(filename)
 
         with open('data.json', 'a') as fp:
             fp.write("[ {\"Word\": \"VZBHEADERPLZIGNORE\"} [")
@@ -350,13 +340,13 @@ class vz_speech_recog:
         avgs = []
 
         med_output = copy.deepcopy(output_format[:cut])
-
+        # print('got here')
         if plot:
             rownum = int(((cut - 1) / 4) + 1)
             pitchfig, axs = plt.subplots(rownum, 4, figsize=(20, rownum * 5))
 
         for idx, tes in enumerate(med_output):
-
+            # print('got here - idx')
             # print(f"removed {frame_from_ns(tes['Offset'])} frames")
             # print(f"removed {self.last_o_d_global} frames")
             _ = self.rigged_format.readframes(frame_from_ns(tes['Offset'] - self.last_o_d_global))
@@ -364,8 +354,10 @@ class vz_speech_recog:
             # if idx > 800:
             #     noise_output = wave.open(f'out_wavs/tst{idx}word.wav', 'w')
             #     noise_output.setparams((1, 2, 16000, 4824898, 'NONE', 'not compressed'))
+            # print('got here - read begin')
             frame_count = frame_from_ns(tes['Duration'])
             frames_to_process = self.rigged_format.readframes(frame_count)
+            # print('got here - read end')
             frames = np.frombuffer(frames_to_process, np.int16)
             avgi = np.average(stats.tmean(np.abs(frames), (0, 500)))
             avgs.append(avgi)
@@ -373,11 +365,13 @@ class vz_speech_recog:
             # if idx > 800:
             #     noise_output.writeframes(frames_to_process)
             #     noise_output.close()
+            # print('got here - torch begin')
 
             frames = frames.astype(np.float32) / np.iinfo(np.int16).max
             audioload = torch.tensor(np.copy(frames))[None]
 
             # Compute pitch using first gpu
+            # print('got here - torch mid')
             pitch = torchcrepe.predict(audioload,
                                        16000,
                                        int(16000 / 200.),
@@ -388,12 +382,12 @@ class vz_speech_recog:
             np_pitch = pitch.numpy()[0]
             # print(f'input number {idx}, len of pitch {len(np_pitch)}')
             np_downsampled_pitch = signal.decimate(np_pitch, 10, axis=0, n=1 if len(np_pitch) <= 27 else 8)
-
+            # print('got here - torch stop')
             x = math.floor(running_frame_count / 4)
             y = running_frame_count % 4
 
             med_output[idx]['pitch_vals'] = list([float(i) for i in np_downsampled_pitch])
-
+            # print("got here -plot end")
             if plot:
                 axs[x, y].plot(np_downsampled_pitch, c='b')
                 ax2 = axs[x, y].twiny()
