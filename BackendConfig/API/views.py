@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from .models import Podcast, User
 from .serializers import PodcastSerializer, UserSerializer
 from .Fetcher import Fetcher
-from .Transcriber.transcriber import Transcriber
+from .transcriber import Transcriber
 import json
 import boto3
 import os
