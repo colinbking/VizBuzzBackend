@@ -1,7 +1,7 @@
 from django.urls import include, path
 from rest_framework import routers
 from .views import TranscriptView, UserView, PodcastView, \
- UserViewSet, PodcastViewSet, TestUploadDataView, LoginView
+ UserViewSet, PodcastViewSet, LoginView
 
 # Routers ensure requests end up at right source dynamically,
 # they work with viewsets to route requests.
