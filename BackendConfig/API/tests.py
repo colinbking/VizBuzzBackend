@@ -1,5 +1,5 @@
 from django.test import TestCase
-from .models import Podcast
+from .models import Podcast, User
 
 
 class TestModels(TestCase):
@@ -8,7 +8,7 @@ class TestModels(TestCase):
     """
     def setUp(self) -> None:
         """
-        Defines a dummy Podcast object.
+        Defines dummy models.
         """
         self.podcast = Podcast.objects.create(
             id='0123456789',
@@ -24,10 +24,30 @@ class TestModels(TestCase):
             duration=0
         )
 
-    def test_podcast_model(self):
+        self.user = User.objects.create(
+            id="abc",
+            name="John Doe",
+            username="johndoe413",
+            favorites=["TestPodcast1", "TestPodcast2"],
+            password="password",
+            google_login_info="johndoe@gmail.com"
+        )
+
+    def test_model_types(self):
         """
-        Tests the type and name of the created dummy Podcast object.
+        Tests the types of the created model instances.
         """
         test_podcast = self.podcast
+        test_user = self.user
         self.assertTrue(isinstance(test_podcast, Podcast))
+        self.assertTrue(isinstance(test_user, User))
         self.assertEqual(str(test_podcast), 'TestPodcast')
+    
+    def test_model_str_methods(self):
+        """
+        Tests the str methods of the created model instances.
+        """
+        test_podcast = self.podcast
+        test_user = self.user
+        self.assertEqual(str(test_podcast), 'TestPodcast')
+        self.assertEqual(str(test_user), 'johndoe413')
