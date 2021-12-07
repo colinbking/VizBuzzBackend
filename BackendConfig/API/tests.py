@@ -42,7 +42,7 @@ class TestModels(TestCase):
         self.assertTrue(isinstance(test_podcast, Podcast))
         self.assertTrue(isinstance(test_user, User))
         self.assertEqual(str(test_podcast), 'TestPodcast')
-    
+
     def test_model_str_methods(self):
         """
         Tests the str methods of the created model instances.
