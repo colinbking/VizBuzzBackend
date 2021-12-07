@@ -18,6 +18,5 @@ urlpatterns = [
     path('user', UserView.as_view(), name="userView"),
     path('podcast', PodcastView.as_view(), name="podcastView"),
     path('', include(router.urls)),
-    path('test-upload', TestUploadDataView.as_view(), name='testUploadView'),
     path('login', LoginView.as_view(), name='login')
 ]
