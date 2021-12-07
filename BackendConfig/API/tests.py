@@ -4,7 +4,6 @@ from .views import TranscriptView, UserViewSet, PodcastViewSet, UserView, \
                    LoginView, PodcastView
 
 
-
 class TestModels(TestCase):
     """
     Class for testing all models.

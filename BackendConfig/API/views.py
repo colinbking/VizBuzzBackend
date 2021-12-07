@@ -1,5 +1,5 @@
 from rest_framework import viewsets, views
-from django.http import HttpResponse, JsonResponse, HttpResponseServerError
+from django.http import JsonResponse, HttpResponseServerError
 from rest_framework.response import Response
 from .models import Podcast, User
 from .serializers import PodcastSerializer, UserSerializer
