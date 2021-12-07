@@ -1,5 +1,8 @@
 from django.test import TestCase
 from .models import Podcast, User
+from .views import TranscriptView, UserViewSet, PodcastViewSet, UserView, \
+                   LoginView, PodcastView
+
 
 
 class TestModels(TestCase):
@@ -37,17 +40,39 @@ class TestModels(TestCase):
         """
         Tests the types of the created model instances.
         """
-        test_podcast = self.podcast
-        test_user = self.user
-        self.assertTrue(isinstance(test_podcast, Podcast))
-        self.assertTrue(isinstance(test_user, User))
-        self.assertEqual(str(test_podcast), 'TestPodcast')
+        self.assertTrue(isinstance(self.podcast, Podcast))
+        self.assertTrue(isinstance(self.user, User))
 
     def test_model_str_methods(self):
         """
         Tests the str methods of the created model instances.
         """
-        test_podcast = self.podcast
-        test_user = self.user
-        self.assertEqual(str(test_podcast), 'TestPodcast')
-        self.assertEqual(str(test_user), 'johndoe413')
+        self.assertEqual(str(self.podcast), 'TestPodcast')
+        self.assertEqual(str(self.user), 'johndoe413')
+
+
+class TestViews(TestCase):
+    """
+    Class for testing all views.
+    """
+    def setUp(self) -> None:
+        """
+        Defines dummy views.
+        """
+        self.transcript_view = TranscriptView()
+        self.user_view_set = UserViewSet()
+        self.podcast_view_set = PodcastViewSet()
+        self.user_view = UserView()
+        self.login_view = LoginView()
+        self.podcast_view = PodcastView()
+
+    def test_view_types(self):
+        """
+        Tests the types of the created view instances.
+        """
+        self.assertTrue(isinstance(self.transcript_view, TranscriptView))
+        self.assertTrue(isinstance(self.user_view_set, UserViewSet))
+        self.assertTrue(isinstance(self.podcast_view_set, PodcastViewSet))
+        self.assertTrue(isinstance(self.user_view, UserView))
+        self.assertTrue(isinstance(self.login_view, LoginView))
+        self.assertTrue(isinstance(self.podcast_view, PodcastView))

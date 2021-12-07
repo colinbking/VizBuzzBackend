@@ -7,10 +7,6 @@ import json
 import boto3
 
 
-def homePageView(request):
-    return HttpResponse('Hello, World!')
-
-
 class TranscriptView(views.APIView):
     def __init__(self):
         views.APIView.__init__(self)
