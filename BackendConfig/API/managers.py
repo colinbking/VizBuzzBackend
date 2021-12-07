@@ -1,7 +1,8 @@
 from django.contrib.auth.base_user import BaseUserManager
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.auth.hashers import make_password
-import uuid 
+import uuid
+
 
 class CustomUserManager(BaseUserManager):
     """
@@ -27,12 +28,14 @@ class CustomUserManager(BaseUserManager):
         user.save()
         return user
 
-    def create_superuser(self,username, password, id=None, name=None, **extra_fields):
+    def create_superuser(self, username, password, id=None, name=None, **extra_fields):
         """
         Create and save a SuperUser with the given email and password.
         """
-        if not id: id = str(uuid.uuid4())
-        if not name: name = username
+        if not id:
+            id = str(uuid.uuid4())
+        if not name:
+            name = username
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_active', True)

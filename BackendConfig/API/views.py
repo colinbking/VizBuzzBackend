@@ -3,11 +3,8 @@ from django.http import HttpResponse, JsonResponse, HttpResponseServerError
 from rest_framework.response import Response
 from .models import Podcast, User
 from .serializers import PodcastSerializer, UserSerializer
-from .Fetcher import Fetcher
 import json
 import boto3
-import uuid
-import os
 
 
 def homePageView(request):
@@ -31,7 +28,9 @@ class TranscriptView(views.APIView):
                 transcript_file_id = queried_podcast_data["transcript_file_id"]
                 transcript_bucket_name = queried_podcast_data["transcript_bucket_id"]
                 return JsonResponse(
-                    json.loads(self.s3.get_object(Bucket=transcript_bucket_name, Key=transcript_file_id)['Body'].read()),
+                    json.loads(
+                        self.s3.get_object(Bucket=transcript_bucket_name, Key=transcript_file_id)['Body'].read()
+                    ),
                     safe=False,
                     status=200
                 )
