@@ -7,9 +7,9 @@ VizBuzz is a mobile app that brings the intricacies and nuances of audio podcast
 * Intelligent transcription service via Microsoft Azure's Cognitive Services API
 * Cross-platform frontend built in ReactNative
 * Customizable podcast library with support for users to upload podcasts
-* Visual cues for sentiment, pitch, and volume.
+* Visual cues for sentiment, pitch, and volume
 * Secure user authentication and accounts system
-* Robust backend in Azure, Django, and Heroku
+* Robust backend in Azure, Django, AWS, and Heroku
 
 ## How to run
 \[TBD\]
