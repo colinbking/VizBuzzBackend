@@ -12,7 +12,9 @@ VizBuzz is a mobile app that brings the intricacies and nuances of audio podcast
 * Robust backend in Azure, Django, AWS, and Heroku
 
 ## How to run
-\[TBD\]
+1. `cd` to the `BackendConfig` directory
+2. Create a `.env` file and populate it with the required variables
+3. Run `python3 manage.py runserver`
 
 ## Files explained
 This repository contains the code for the backend.
