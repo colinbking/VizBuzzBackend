@@ -91,6 +91,9 @@ DATABASES = {
         'PASSWORD': env('RDS_PASSWORD'),
         'HOST': env('RDS_HOST'),
         'PORT': '5432',
+        'TEST': {
+            'NAME': 'mytestdatabase',
+        },
     }
     # 'default': {
     #     'ENGINE': 'django.db.backends.sqlite3',
