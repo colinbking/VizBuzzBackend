@@ -1,6 +1,6 @@
 from django.urls import include, path
 
-from BackendConfig.API.views.transcript_view import TranscriptView, UserView, UserViewAll, \
+from .views.transcript_view import TranscriptView, UserView, UserViewAll, \
     PodcastView, PodcastViewAll, HomePageView, LoginView, RefreshView, LogoutView
 
 # Routers ensure requests end up at right source dynamically,
