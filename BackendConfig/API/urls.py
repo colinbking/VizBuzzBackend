@@ -1,6 +1,6 @@
 from django.urls import include, path
 
-from .views.transcript_view import TranscriptView, UserView, UserViewAll, \
+from .views import TranscriptView, UserView, UserViewAll, \
     PodcastView, PodcastViewAll, HomePageView, LoginView, RefreshView, LogoutView
 
 # Routers ensure requests end up at right source dynamically,
