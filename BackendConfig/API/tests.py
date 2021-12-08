@@ -1,6 +1,7 @@
 from django.test import TestCase
 from .models import Podcast, User
-from .views import TranscriptView, UserView, UserViewAll, LoginView, PodcastView, PodcastViewAll
+from .views import TranscriptView, UserView, UserViewAll, LoginView, PodcastView, \
+    PodcastViewAll, HomePageView, RefreshView, LogoutView
 
 
 class TestModels(TestCase):
@@ -62,7 +63,10 @@ class TestViews(TestCase):
         self.podcast_view_all = PodcastViewAll()
         self.user_view = UserView()
         self.login_view = LoginView()
+        self.home_page_view = HomePageView()
         self.podcast_view = PodcastView()
+        self.refresh_view = RefreshView()
+        self.logout_view = LogoutView()
 
     def test_view_types(self):
         """
@@ -73,7 +77,10 @@ class TestViews(TestCase):
         self.assertTrue(isinstance(self.podcast_view_all, PodcastViewAll))
         self.assertTrue(isinstance(self.user_view, UserView))
         self.assertTrue(isinstance(self.login_view, LoginView))
+        self.assertTrue(isinstance(self.home_page_view, HomePageView))
         self.assertTrue(isinstance(self.podcast_view, PodcastView))
+        self.assertTrue(isinstance(self.refresh_view, RefreshView))
+        self.assertTrue(isinstance(self.logout_view, LogoutView))
 
     def test_podcasts_endpoint(self):
         """
@@ -84,8 +91,16 @@ class TestViews(TestCase):
 
     def test_users_endpoint(self):
         """
-        Tests the users endpoint. Specifically, makes sure transcripts can be
+        Tests the users endpoint. Specifically, makes sure users can be
         queried for.
         """
         response = self.client.get("/users", follow=True)
+        self.assertEqual(response.status_code, 200)
+
+    def test_view_transcripts_endpoint(self):
+        """
+        Tests the view-transcripts endpoint. Specifically, makes sure transcripts can be
+        queried for.
+        """
+        response = self.client.get("/view-transcripts", follow=True)
         self.assertEqual(response.status_code, 200)
