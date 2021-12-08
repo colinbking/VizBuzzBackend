@@ -14,6 +14,17 @@ VizBuzz is a mobile app that brings the intricacies and nuances of audio podcast
 ## How to run
 \[TBD\]
 
+## Files explained
+This repository contains the code for the backend.
+* `.github/workflows`
+  * The script for running Github Actions. Every time a commit is made, Actions builds our projects, executes unit tests, and computes the code coverage.
+* `BackendConfig/API`
+  * `/Transcriber` converts and streams an audio file, calling the Microsoft API and generating the transcript.
+  * `/views` holds the endpoints to the Django server.
+  * `test.py` contains the unit tests for the backend.
+* `BackendConfig/BackendConfig`
+  * Contains necessary configurations for Django.
+
 ## Team
 VizBuzz is created with ♥️ by Prashanth Pai, Grace Nichols, Michael Sprintson, Timothy Goh, Colin King, Lucas Banus, and Rashi Bose.
 
