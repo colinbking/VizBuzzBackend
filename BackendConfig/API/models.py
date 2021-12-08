@@ -1,5 +1,6 @@
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
 
@@ -21,10 +22,10 @@ class Podcast(models.Model):
         return self.name
 
 
-class User(models.Model):
+class User(AbstractUser):
     id = models.CharField(max_length=200, primary_key=True)
     name = models.CharField(max_length=100)
-    username = models.CharField(max_length=100)
+    username = models.CharField(max_length=100, unique=True)
     favorites = ArrayField(models.CharField(max_length=10, blank=True), size=10, default=list)
     password = models.CharField(max_length=100)
     google_login_info = models.CharField(max_length=300)
