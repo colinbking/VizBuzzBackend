@@ -3,13 +3,7 @@
 # the appropriate model for backend manipulation.
 
 from rest_framework import serializers
-from .models import Transcript, Podcast, User
-
-
-class TranscriptSerializer(serializers.HyperlinkedModelSerializer):
-    class Meta:
-        model = Transcript
-        fields = ('name', 'alias', 'color', 'all_text')
+from .models import Podcast, User
 
 
 class PodcastSerializer(serializers.ModelSerializer):
