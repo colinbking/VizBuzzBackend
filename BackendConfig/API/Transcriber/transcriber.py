@@ -134,7 +134,7 @@ class vz_speech_recog:
         if os.path.exists(output_path):
             os.remove(output_path)
         audio_input = ffmpeg.input(input_url)
-        audio_output = ffmpeg.output(audio_input, output_path, ac = 1, ar=16000)
+        audio_output = ffmpeg.output(audio_input, output_path, ac = 1, ar=16000, f='wav')
         audio_output.run()
 
         # rename input_folder_path + os.sep + "Fs" + str(16000) +  "_" + "NC" + str(1) to
