@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from .models import Podcast, User
 from .serializers import PodcastSerializer, UserSerializer
 from .Fetcher import Fetcher
-from .transcriber import Transcriber
+from .Transcriber.transcriber import Transcriber
 import json
 import boto3
 import uuid
@@ -26,25 +26,16 @@ class TranscriptView(views.APIView):
         """
         try:
             # try url params first
-            transcript_bucket_id = request.GET.get("transcript_bucket_id", None)
-            transcript_file_id = request.GET.get("transcript_file_id", None)
-            if transcript_bucket_id is not None and transcript_file_id is not None:
+            podcast_id = request.GET.get("podcast_id", None)
+            if podcast_id:
+                queried_podcast_data = PodcastSerializer(Podcast.objects.get(id=podcast_id)).data
+                transcript_file_id = queried_podcast_data["transcript_file_id"]
+                transcript_bucket_name = queried_podcast_data["transcript_bucket_id"]
                 return JsonResponse(
-                    json.loads(self.s3.get_object(Bucket=transcript_bucket_id, Key=transcript_file_id)['Body'].read()),
+                    json.loads(self.s3.get_object(Bucket=transcript_bucket_name, Key=transcript_file_id)['Body'].read()),
                     safe=False,
                     status=200
                 )
-
-            # else attempt json
-            json_data = json.loads(request.body)
-            transcript_bucket_id = json_data['transcript_bucket_id']
-            transcript_file_id = json_data['transcript_file_id']
-            return JsonResponse(
-                json.loads(self.s3.get_object(Bucket=transcript_bucket_id, Key=transcript_file_id)['Body'].read()),
-                safe=False,
-                status=200
-            )
-
         except KeyError:
             return Response("transcript_bucket_id or transcript_file_id not found in request body", status=400)
         except Exception as e:
@@ -219,7 +210,7 @@ class AudioUploadView(views.APIView):
         
     # triggers transcriber to transcribe a podcast from a streaming url
     def transcribe_from_url(self, metadata):
-        transcription_file = self.transcriber.transcribe_from_streaming_url(metadata["streaming_url"])
+        transcription_file = self.transcriber.transcribe_from_url(metadata["streaming_url"])
         new_file_name = metadata["name"] + str(metadata["episode_number"]) +  ".json"
         if transcription_file:
             try:
@@ -245,15 +236,15 @@ class AudioUploadView(views.APIView):
         podcast_metadata = json.loads(request.body)
         
         # if grabbing a wav file from s3
-        if "audio_bucket" in podcast_metadata and "audio_key" in podcast_metadata:
-            bucket = podcast_metadata["audio_bucket"]
-            audio_key = podcast_metadata["audio_key"]
-            try:
-                return self.transcribe_from_bucket_and_key(bucket, audio_key, podcast_metadata)
-            except Exception as e:
-                return HttpResponseServerError(e)
+        # if "audio_bucket" in podcast_metadata and "audio_key" in podcast_metadata:
+        #     bucket = podcast_metadata["audio_bucket"]
+        #     audio_key = podcast_metadata["audio_key"]
+        #     try:
+        #         return self.transcribe_from_bucket_and_key(bucket, audio_key, podcast_metadata)
+        #     except Exception as e:
+        #         return HttpResponseServerError(e)
         # if streaming_url is supplied in the metadata, transcribe directly from streaming url
-        elif "streaming_url" in podcast_metadata:
+        if "streaming_url" in podcast_metadata:
             return self.transcribe_from_url(podcast_metadata)
         else:
             return HttpResponseServerError("Error: unknown keys")
