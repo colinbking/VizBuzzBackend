@@ -1,7 +1,6 @@
 from django.test import TestCase
 from .models import Podcast, User
-from .views import TranscriptView, UserView, \
-                   LoginView, PodcastView
+from .views import TranscriptView, UserView, UserViewAll, LoginView, PodcastView, PodcastViewAll
 
 
 class TestModels(TestCase):
@@ -59,8 +58,8 @@ class TestViews(TestCase):
         Defines dummy views.
         """
         self.transcript_view = TranscriptView()
-        # self.user_view_set = UserViewSet()
-        # self.podcast_view_set = PodcastViewSet()
+        self.user_view_all = UserViewAll()
+        self.podcast_view_all = PodcastViewAll()
         self.user_view = UserView()
         self.login_view = LoginView()
         self.podcast_view = PodcastView()
@@ -70,8 +69,8 @@ class TestViews(TestCase):
         Tests the types of the created view instances.
         """
         self.assertTrue(isinstance(self.transcript_view, TranscriptView))
-        # self.assertTrue(isinstance(self.user_view_set, UserViewSet))
-        # self.assertTrue(isinstance(self.podcast_view_set, PodcastViewSet))
+        self.assertTrue(isinstance(self.user_view_all, UserViewAll))
+        self.assertTrue(isinstance(self.podcast_view_all, PodcastViewAll))
         self.assertTrue(isinstance(self.user_view, UserView))
         self.assertTrue(isinstance(self.login_view, LoginView))
         self.assertTrue(isinstance(self.podcast_view, PodcastView))
