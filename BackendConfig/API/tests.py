@@ -75,3 +75,18 @@ class TestViews(TestCase):
         self.assertTrue(isinstance(self.user_view, UserView))
         self.assertTrue(isinstance(self.login_view, LoginView))
         self.assertTrue(isinstance(self.podcast_view, PodcastView))
+
+    def test_podcasts_endpoint(self):
+        """
+        Tests the podcasts endpoint.
+        """
+        response = self.client.get("/podcasts", follow=True)
+        self.assertEqual(response.status_code, 200)
+    
+    def test_users_endpoint(self):
+        """
+        Tests the users endpoint. Specifically, makes sure transcripts can be
+        queried for.
+        """
+        response = self.client.get("/users", follow=True)
+        self.assertEqual(response.status_code, 200)
