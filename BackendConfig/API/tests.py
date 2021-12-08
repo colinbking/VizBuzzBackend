@@ -82,7 +82,7 @@ class TestViews(TestCase):
         """
         response = self.client.get("/podcasts", follow=True)
         self.assertEqual(response.status_code, 200)
-    
+
     def test_users_endpoint(self):
         """
         Tests the users endpoint. Specifically, makes sure transcripts can be
