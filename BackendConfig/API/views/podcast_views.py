@@ -7,10 +7,11 @@ from ..util import validate_token
 
 import json
 
-"""
-Primary view for CRUD on Podcast objects
-"""
+
 class PodcastView(views.APIView):
+    """
+    Primary view for CRUD on Podcast objects
+    """
 
     def get(self, request, format=None):
         """
@@ -20,7 +21,7 @@ class PodcastView(views.APIView):
             validate_token(request)
         except Exception as e:
             return HttpResponse('Unauthorized ' + str(e), status=401)
-        
+
         try:
             json_data = json.loads(request.body)
             req_id = json_data["id"]
@@ -36,13 +37,13 @@ class PodcastView(views.APIView):
 
     def post(self, request, format=None):
         """
-        creates a podcast entry
+        Creates a podcast entry
         """
         try:
             validate_token(request)
         except Exception as e:
             return HttpResponse('Unauthorized ' + str(e), status=401)
-        
+
         try:
             d = json.loads(request.body)
             Podcast(
@@ -68,22 +69,21 @@ class PodcastView(views.APIView):
 
         return HttpResponseServerError("Server Error")
 
-"""
-Primary view for querying all Podcasts
-"""
+
 class PodcastViewAll(views.APIView):
-    """[View to see all transcripts]
+    """
+    Primary view for querying all Podcasts
+    [View to see all transcripts]
     """
     def get(self, request):
         try:
             validate_token(request)
         except Exception as e:
             return HttpResponse('Unauthorized: ' + str(e), status=401)
-        
+
         queryset = Podcast.objects.all()
-        serializer = PodcastSerializer(queryset, many = True)
+        serializer = PodcastSerializer(queryset, many=True)
         response = Response()
-        
+
         response.data = serializer.data
         return response
-

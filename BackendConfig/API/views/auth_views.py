@@ -5,13 +5,15 @@ from ..models import User
 from ..util import validate_token
 from rest_framework.exceptions import AuthenticationFailed
 
-import jwt, datetime
+import jwt
+import datetime
 
-"""
-Primary view for logging in and obtaining refresh and acess tokens. 
-Stores user id in session.
-"""
+
 class LoginView(views.APIView):
+    """
+    Primary view for logging in and obtaining refresh and acess tokens.
+    Stores user id in session.
+    """
     def post(self, request):
         username = request.data['username']
         password = request.data['password']
@@ -20,7 +22,7 @@ class LoginView(views.APIView):
 
         if user is None:
             raise AuthenticationFailed('User not found!')
-        
+
         if not user.check_password(password):
             raise AuthenticationFailed('Incorrect password!')
 
@@ -49,13 +51,14 @@ class LoginView(views.APIView):
         }
 
         request.session['user_id'] = user.id
-        
+
         return response
 
-"""
-Primary view for refreshing an access token
-"""
+
 class RefreshView(views.APIView):
+    """
+    Primary view for refreshing an access token
+    """
     def post(self, request):
         try:
             validate_token(request, refresh=True)
@@ -64,7 +67,7 @@ class RefreshView(views.APIView):
 
         print("refresher:", request.session.get('user_id', None))
         requester_id = request.session.get('user_id', None)
-        
+
         if requester_id:
             payload = {
                         'id': requester_id,
@@ -73,7 +76,7 @@ class RefreshView(views.APIView):
                     }
 
             access_token = jwt.encode(payload, 'secret', algorithm='HS256')
-            
+
             response = Response()
             response.set_cookie(key='access', value=access_token, httponly=True)
             response.data = {
@@ -82,14 +85,14 @@ class RefreshView(views.APIView):
             response.set_cookie(key='access', value=access_token, httponly=True)
 
             return response
-        
+
         return HttpResponse('Unauthorized: User not Found', status=401)
 
 
-"""
-View to Logout, deletes session and tokens
-"""
 class LogoutView(views.APIView):
+    """
+    View to Logout, deletes session and tokens
+    """
     def post(self, request):
         errors = []
         try:

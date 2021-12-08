@@ -37,7 +37,8 @@
 #                 transcript_file_id = queried_podcast_data["transcript_file_id"]
 #                 transcript_bucket_name = queried_podcast_data["transcript_bucket_id"]
 #                 return JsonResponse(
-#                     json.loads(self.s3.get_object(Bucket=transcript_bucket_name, Key=transcript_file_id)['Body'].read()),
+#                     json.loads(self.s3.get_object(Bucket=transcript_bucket_name,
+#                       Key=transcript_file_id)['Body'].read()), # this line was broken
 #                     safe=False,
 #                     status=200
 #                 )
@@ -47,32 +48,25 @@
 #             return Response("failed to get transcript: " + str(e) + " " + str(type(e)), status=400)
 
 
-
 # """
 # Primary view for CRUD on User objects
 # """
 # class UserView(views.APIView):
-    
 #     def get(self, request, format=None):
-        
 #         try:
 #             validate_token(request)
 #         except Exception as e:
 #             return HttpResponse('Unauthorized: ' + str(e), status=401)
-        
 #         try:
 #             json_data = json.loads(request.body)
 #             req_id = json_data["id"]
 #             queried_user = UserSerializer(User.objects.get(id=req_id))
 #             return JsonResponse(queried_user.data)
-
 #         except KeyError:
 #             return Response("id key not found in request body", status=400)
 #         except Exception as e:
 #             return Response("failed to get User" + str(e), status=400)
-
 #         return HttpResponseServerError("Server Error")
-
 
 #     # used during user creation
 #     def post(self, request, format=None):
@@ -109,7 +103,6 @@
 #             validate_token(request)
 #         except Exception as e:
 #             return HttpResponse('Unauthorized: ' + str(e), status=401)
-        
 #         queryset = User.objects.all()
 #         serializer = UserSerializer(queryset, many = True)
 #         response = Response()
@@ -129,7 +122,7 @@
 #             validate_token(request)
 #         except Exception as e:
 #             return HttpResponse('Unauthorized ' + str(e), status=401)
-        
+
 #         try:
 #             json_data = json.loads(request.body)
 #             req_id = json_data["id"]
@@ -151,7 +144,7 @@
 #             validate_token(request)
 #         except Exception as e:
 #             return HttpResponse('Unauthorized ' + str(e), status=401)
-        
+
 #         try:
 #             d = json.loads(request.body)
 #             Podcast(
@@ -188,17 +181,17 @@
 #             validate_token(request)
 #         except Exception as e:
 #             return HttpResponse('Unauthorized: ' + str(e), status=401)
-        
+
 #         queryset = Podcast.objects.all()
 #         serializer = PodcastSerializer(queryset, many = True)
 #         response = Response()
-        
+
 #         response.data = serializer.data
 #         return response
 
 
 # """
-# Primary view for logging in and obtaining refresh and acess tokens. 
+# Primary view for logging in and obtaining refresh and acess tokens.
 # Stores user id in session.
 # """
 # class LoginView(views.APIView):
@@ -210,7 +203,7 @@
 
 #         if user is None:
 #             raise AuthenticationFailed('User not found!')
-        
+
 #         if not user.check_password(password):
 #             raise AuthenticationFailed('Incorrect password!')
 
@@ -239,7 +232,7 @@
 #         }
 
 #         request.session['user_id'] = user.id
-        
+
 #         return response
 
 # """
@@ -254,7 +247,7 @@
 
 #         print("refresher:", request.session.get('user_id', None))
 #         requester_id = request.session.get('user_id', None)
-        
+
 #         if requester_id:
 #             payload = {
 #                         'id': requester_id,
@@ -263,7 +256,7 @@
 #                     }
 
 #             access_token = jwt.encode(payload, 'secret', algorithm='HS256')
-            
+
 #             response = Response()
 #             response.set_cookie(key='access', value=access_token, httponly=True)
 #             response.data = {
@@ -272,7 +265,7 @@
 #             response.set_cookie(key='access', value=access_token, httponly=True)
 
 #             return response
-        
+
 #         return HttpResponse('Unauthorized: User not Found', status=401)
 
 

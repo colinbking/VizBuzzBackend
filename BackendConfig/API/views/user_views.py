@@ -8,18 +8,18 @@ from ..util import validate_token
 import json
 import uuid
 
-"""
-Primary view for CRUD on User objects
-"""
+
 class UserView(views.APIView):
-    
+    """
+    Primary view for CRUD on User objects
+    """
     def get(self, request, format=None):
-        
+
         try:
             validate_token(request)
         except Exception as e:
             return HttpResponse('Unauthorized: ' + str(e), status=401)
-        
+
         try:
             json_data = json.loads(request.body)
             req_id = json_data["id"]
@@ -32,7 +32,6 @@ class UserView(views.APIView):
             return Response("failed to get User" + str(e), status=400)
 
         return HttpResponseServerError("Server Error")
-
 
     # used during user creation
     def post(self, request, format=None):
@@ -59,19 +58,18 @@ class UserView(views.APIView):
         return HttpResponseServerError("Server Error")
 
 
-"""
-Primary view for querying all users
-"""
 class UserViewAll(views.APIView):
-
+    """
+    Primary view for querying all users
+    """
     def get(self, request):
         try:
             validate_token(request)
         except Exception as e:
             return HttpResponse('Unauthorized: ' + str(e), status=401)
-        
+
         queryset = User.objects.all()
-        serializer = UserSerializer(queryset, many = True)
+        serializer = UserSerializer(queryset, many=True)
         response = Response()
         response.data = serializer.data
         return response

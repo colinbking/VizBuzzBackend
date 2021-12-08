@@ -3,6 +3,7 @@ from rest_framework.exceptions import AuthenticationFailed
 
 import jwt
 
+
 def validate_token(request, refresh=False):
     if refresh:
         token = request.COOKIES.get('refresh')

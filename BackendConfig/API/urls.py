@@ -1,7 +1,7 @@
 from django.urls import include, path
-from rest_framework import routers
-from rest_framework.serializers import as_serializer_error
-from .views import *
+
+from BackendConfig.API.views.transcript_view import TranscriptView, UserView, UserViewAll, \
+    PodcastView, PodcastViewAll, HomePageView, LoginView, RefreshView, LogoutView
 
 # Routers ensure requests end up at right source dynamically,
 # they work with viewsets to route requests.
