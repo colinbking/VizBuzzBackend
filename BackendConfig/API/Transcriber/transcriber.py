@@ -84,10 +84,10 @@ class Transcriber():
         self.fetcher = fetcher
 
     # to be used when there is a url to be downloaded from a file
-    def transcribe_from_url(self, url = None):
+    def transcribe_from_url(self, url = None, pitch = True):
         if url is None:
             url = "https://cdn.simplecast.com/audio/bceb3f91-afbb-4f97-87f6-5f4387bbb382/episodes/b5d7ea27-3fe2-4b88-913f-7b37e67fb35e/audio/79a85e01-7fb2-49cf-8df8-632f290e468f/default_tc.mp3?aid=rss_feed&feed=c2RzTGta"
-        vzsr = vz_speech_recog() 
+        vzsr = vz_speech_recog(pitch) 
         vzsr.download_file(url)
         vzsr.speech_recognition_with_push_stream("out_wavs/test.wav")
         # self.fetcher.s3.upload_file('new_data.json', os.getenv("TRANSCRIPT_BUCKET_NAME"), key + '.json')
@@ -105,12 +105,14 @@ class Transcriber():
 
 
 class vz_speech_recog:
-    def __init__(self, filename="out_wavs/test.wav"):
+    def __init__(self, filename="out_wavs/test.wav", pitch = True):
         # self.best_lexs = []
         # self.jrds = []
 
         if os.path.exists("data.json"):
             os.remove("data.json")
+
+        self.pitch = True
 
         # self.os = []
         self.os = []
@@ -276,7 +278,7 @@ class vz_speech_recog:
         print("wrote to json successfully")
 
     def add_pitch_to_file(self, o):
-        no = self.add_pitch_to_output(o)
+        no = self.add_pitch_to_output(o, self.pitch)
         print("added pitch successfully")
 
         truncate_utf8_chars('data.json', 1)  # remove the ending ]
@@ -335,7 +337,7 @@ class vz_speech_recog:
 
         return mid_output
 
-    def add_pitch_to_output(self, output_format: dict, cut=None, plot=False):
+    def add_pitch_to_output(self, output_format: dict, cut=None, plot=False, pitch = False):
         running_frame_count = 0
         avgs = []
 
@@ -368,25 +370,26 @@ class vz_speech_recog:
             # print('got here - torch begin')
 
             frames = frames.astype(np.float32) / np.iinfo(np.int16).max
-            audioload = torch.tensor(np.copy(frames))[None]
+            if pitch:
+                audioload = torch.tensor(np.copy(frames))[None]
 
-            # Compute pitch using first gpu
-            # print('got here - torch mid')
-            pitch = torchcrepe.predict(audioload,
-                                       16000,
-                                       int(16000 / 200.),
-                                       fmin=50,
-                                       fmax=550,
-                                       model='tiny',
-                                       batch_size=2048)
-            np_pitch = pitch.numpy()[0]
-            # print(f'input number {idx}, len of pitch {len(np_pitch)}')
-            np_downsampled_pitch = signal.decimate(np_pitch, 10, axis=0, n=1 if len(np_pitch) <= 27 else 8)
-            # print('got here - torch stop')
-            x = math.floor(running_frame_count / 4)
-            y = running_frame_count % 4
+                # Compute pitch using first gpu
+                # print('got here - torch mid')
+                pitch = torchcrepe.predict(audioload,
+                                        16000,
+                                        int(16000 / 200.),
+                                        fmin=50,
+                                        fmax=550,
+                                        model='tiny',
+                                        batch_size=2048)
+                np_pitch = pitch.numpy()[0]
+                # print(f'input number {idx}, len of pitch {len(np_pitch)}')
+                np_downsampled_pitch = signal.decimate(np_pitch, 10, axis=0, n=1 if len(np_pitch) <= 27 else 8)
+                # print('got here - torch stop')
+                x = math.floor(running_frame_count / 4)
+                y = running_frame_count % 4
 
-            med_output[idx]['pitch_vals'] = list([float(i) for i in np_downsampled_pitch])
+                med_output[idx]['pitch_vals'] = list([float(i) for i in np_downsampled_pitch])
             # print("got here -plot end")
             if plot:
                 axs[x, y].plot(np_downsampled_pitch, c='b')
