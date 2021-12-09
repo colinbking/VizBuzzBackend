@@ -64,3 +64,4 @@ typing-inspect==0.7.1
 urllib3==1.26.7
 wasabi==0.8.2
 whitenoise==5.3.0
+PyJWT==2.3.0
