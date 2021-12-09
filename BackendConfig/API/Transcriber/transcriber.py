@@ -112,7 +112,7 @@ class vz_speech_recog:
         if os.path.exists("data.json"):
             os.remove("data.json")
 
-        self.pitch = True
+        self.pitch = pitch
 
         # self.os = []
         self.os = []
