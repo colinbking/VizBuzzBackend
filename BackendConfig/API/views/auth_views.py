@@ -1,4 +1,4 @@
-from django.http.response import HttpResponseForbidden
+# from django.http.response import HttpResponseForbidden
 from rest_framework import views
 from django.http import HttpResponse
 from rest_framework.response import Response
@@ -53,7 +53,7 @@ class LoginView(views.APIView):
             }
 
             request.session['user_id'] = user.id
-        
+
             return response
         except Exception as e:
             return HttpResponse("error:" + str(e))
