@@ -6,7 +6,7 @@ from ..models import User
 from ..util import validate_token
 from rest_framework.exceptions import AuthenticationFailed
 
-import jwt
+from jwt import PyJWT
 import datetime
 
 
@@ -40,8 +40,8 @@ class LoginView(views.APIView):
                 'iat': datetime.datetime.utcnow()
             }
 
-            access_token = jwt.encode(access_payload, 'secret', algorithm='HS256')
-            refresh_token = jwt.encode(refresh_payload, 'secret', algorithm='HS256')
+            access_token = PyJWT.encode(access_payload, 'secret', algorithm='HS256')
+            refresh_token = PyJWT.encode(refresh_payload, 'secret', algorithm='HS256')
             response = Response()
 
             response.set_cookie(key='access', value=access_token, httponly=True)
