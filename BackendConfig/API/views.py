@@ -9,6 +9,8 @@ import json
 import boto3
 import uuid
 import os
+from datetime import datetime
+import time
 
 
 def homePageView(request):
@@ -144,6 +146,7 @@ class PodcastView(views.APIView):
         """
         try:
             d = json.loads(request.body)
+            datetime_object = datetime.strptime(d['publish_date'], '%a, %d %b %Y %I:%M:%f %z')
             Podcast(
                 id=d['id'],
                 audio_bucket_id=d['audio_bucket_id'],
@@ -153,7 +156,7 @@ class PodcastView(views.APIView):
                 name=d['name'],
                 episode_number=d['episode_number'],
                 author=d['author'],
-                publish_date=d['publish_date'],
+                publish_date=datetime_object.isoformat(),
                 rss_url=d['rss_url'],
                 duration=d['duration'],
                 word_info=d['word_info']
@@ -180,6 +183,7 @@ class AudioUploadView(views.APIView):
     # upon successful transcription, called to create podcast object in DB.
     def save_podcast_to_db(self, metadata, transcribed_data_filename):
         new_id = uuid.uuid4()
+        datetime_object = datetime.strptime(metadata['publish_date'], '%a, %d %b %Y %I:%M:%f %z')
         podcast_object = Podcast(
             id=new_id,
             audio_bucket_id=metadata["audio_bucket_id"],
@@ -189,7 +193,7 @@ class AudioUploadView(views.APIView):
             name=metadata["name"],
             episode_number=metadata["episode_number"],
             author=metadata["author"],
-            publish_date=metadata["publish_date"],
+            publish_date=datetime_object.isoformat(),
             rss_url=metadata["rss_url"],
             duration=metadata["duration"]
         )
@@ -210,8 +214,12 @@ class AudioUploadView(views.APIView):
         
     # triggers transcriber to transcribe a podcast from a streaming url
     def transcribe_from_url(self, metadata):
-        transcription_file = self.transcriber.transcribe_from_url(metadata["streaming_url"])
+        try:
+            transcription_file = self.transcriber.transcribe_from_url(metadata["streaming_url"], False)
+        except Exception as exc:
+            print(exc)
         new_file_name = metadata["name"] + str(metadata["episode_number"]) +  ".json"
+        time.sleep(60)
         if transcription_file:
             try:
                 self.s3Fetcher.upload_file("data.json", os.getenv('TRANSCRIPT_BUCKET_NAME'), new_file_name)
