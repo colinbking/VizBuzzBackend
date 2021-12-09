@@ -15,7 +15,7 @@ import math
 import torch
 import copy
 import spacy
-from spacytextblob.spacytextblob import SpacyTextBlob  # yes i know this isnt used its on purpose
+from spacytextblob.spacytextblob import SpacyTextBlob  # noqa: F401
 import ffmpeg
 
 load_dotenv()
@@ -84,10 +84,10 @@ class Transcriber():
         self.fetcher = fetcher
 
     # to be used when there is a url to be downloaded from a file
-    def transcribe_from_url(self, url = None, pitch = True):
+    def transcribe_from_url(self, url=None, pitch=True):
         if url is None:
-            url = "https://cdn.simplecast.com/audio/bceb3f91-afbb-4f97-87f6-5f4387bbb382/episodes/b5d7ea27-3fe2-4b88-913f-7b37e67fb35e/audio/79a85e01-7fb2-49cf-8df8-632f290e468f/default_tc.mp3?aid=rss_feed&feed=c2RzTGta"
-        vzsr = vz_speech_recog(pitch = pitch) 
+            url = "https://cdn.simplecast.com/audio/bceb3f91-afbb-4f97-87f6-5f4387bbb382/episodes/b5d7ea27-3fe2-4b88-913f-7b37e67fb35e/audio/79a85e01-7fb2-49cf-8df8-632f290e468f/default_tc.mp3?aid=rss_feed&feed=c2RzTGta"  # noqa: E501
+        vzsr = vz_speech_recog(pitch=pitch)
         # vzsr.download_file(url)
         vzsr.speech_recognition_with_push_stream("out_wavs/test.wav")
         # self.fetcher.s3.upload_file('new_data.json', os.getenv("TRANSCRIPT_BUCKET_NAME"), key + '.json')
@@ -99,13 +99,13 @@ class Transcriber():
         vzsr.convert_folder('wavs', 'out_wavs')
         vzsr.speech_recognition_with_push_stream("out_wavs/test.wav")
         return True
-    
+
     def upload_to_aws(self, bucket, key):
         self.fetcher.s3.upload_file('data.json', os.getenv("TRANSCRIPT_BUCKET_NAME"), key + '.json')
 
 
 class vz_speech_recog:
-    def __init__(self, filename="out_wavs/test.wav", pitch = True):
+    def __init__(self, filename="out_wavs/test.wav", pitch=True):
         # self.best_lexs = []
         # self.jrds = []
 
@@ -132,11 +132,11 @@ class vz_speech_recog:
         os.rename(f"{input_folder_path}/Fs16000_NC1/", output_folder_path)
         # shutil.rmtree(f"{input_folder_path}/Fs16000_NC1/")
 
-    def download_file(self, input_url, output_path = "out_wavs/test.wav"):
+    def download_file(self, input_url, output_path="out_wavs/test.wav"):
         if os.path.exists(output_path):
             os.remove(output_path)
         audio_input = ffmpeg.input(input_url)
-        audio_output = ffmpeg.output(audio_input, output_path, ac = 1, ar=16000, f='wav')
+        audio_output = ffmpeg.output(audio_input, output_path, ac=1, ar=16000, f='wav')
         audio_output.run()
 
         # rename input_folder_path + os.sep + "Fs" + str(16000) +  "_" + "NC" + str(1) to
@@ -377,12 +377,12 @@ class vz_speech_recog:
                 # Compute pitch using first gpu
                 # print('got here - torch mid')
                 pitch = torchcrepe.predict(audioload,
-                                        16000,
-                                        int(16000 / 200.),
-                                        fmin=50,
-                                        fmax=550,
-                                        model='tiny',
-                                        batch_size=2048)
+                                           16000,
+                                           int(16000 / 200.),
+                                           fmin=50,
+                                           fmax=550,
+                                           model='tiny',
+                                           batch_size=2048)
                 np_pitch = pitch.numpy()[0]
                 # print(f'input number {idx}, len of pitch {len(np_pitch)}')
                 np_downsampled_pitch = signal.decimate(np_pitch, 10, axis=0, n=1 if len(np_pitch) <= 27 else 8)
@@ -408,17 +408,18 @@ class vz_speech_recog:
 
         return med_output
 
+
 def test_pitch(frames_to_process):
     frames = np.frombuffer(frames_to_process, np.int16)
     frames = frames.astype(np.float32) / np.iinfo(np.int16).max
     audioload = torch.tensor(np.copy(frames))[None]
     pitch = torchcrepe.predict(audioload,
-                                        16000,
-                                        int(16000 / 200.),
-                                        fmin=50,
-                                        fmax=550,
-                                        model='tiny',
-                                        batch_size=2048)
+                               16000,
+                               int(16000 / 200.),
+                               fmin=50,
+                               fmax=550,
+                               model='tiny',
+                               batch_size=2048)
     np_pitch = pitch.numpy()[0]
     np_downsampled_pitch = signal.decimate(np_pitch, 10, axis=0, n=1 if len(np_pitch) <= 27 else 8)
     return np_downsampled_pitch

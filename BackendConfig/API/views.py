@@ -32,7 +32,8 @@ class TranscriptView(views.APIView):
                 transcript_file_id = queried_podcast_data["transcript_file_id"]
                 transcript_bucket_name = queried_podcast_data["transcript_bucket_id"]
                 return JsonResponse(
-                    json.loads(self.s3.get_object(Bucket=transcript_bucket_name, Key=transcript_file_id)['Body'].read()),
+                    json.loads(
+                        self.s3.get_object(Bucket=transcript_bucket_name, Key=transcript_file_id)['Body'].read()),
                     safe=False,
                     status=200
                 )
@@ -196,7 +197,6 @@ class AudioUploadView(views.APIView):
 
         podcast_object.save()
         return str(new_id)
-        
 
     # triggers transcriber to transcribe a podcast from our s3 bucket
     def transcribe_from_bucket_and_key(self, bucket, audio_key, metadata):
@@ -207,17 +207,16 @@ class AudioUploadView(views.APIView):
             return JsonResponse({"saved podcast id": new_id})
         return HttpResponseServerError("Error: Transcription of file with rss url=" + metadata["rss_url"] + " failed")
 
-        
     # triggers transcriber to transcribe a podcast from a streaming url
     def transcribe_from_url(self, metadata):
         transcription_file = self.transcriber.transcribe_from_url(metadata["streaming_url"])
-        new_file_name = metadata["name"] + str(metadata["episode_number"]) +  ".json"
+        new_file_name = metadata["name"] + str(metadata["episode_number"]) + ".json"
         if transcription_file:
             try:
                 self.s3Fetcher.upload_file("data.json", os.getenv('TRANSCRIPT_BUCKET_NAME'), new_file_name)
             except Exception as e:
-                return HttpResponseServerError("Error: upload of json metadata file for podcast with rss_url=" + metadata["rss_url"] + " failed" + str(e))
-            
+                return HttpResponseServerError("Error: upload of json metadata file for podcast with rss_url=" + metadata["rss_url"] + " failed" + str(e))  # noqa: E501
+
             new_id = self.save_podcast_to_db(metadata, new_file_name)
             return JsonResponse({"saved podcast id": new_id})
 
@@ -234,7 +233,7 @@ class AudioUploadView(views.APIView):
         # data = request.data
 
         podcast_metadata = json.loads(request.body)
-        
+
         # if grabbing a wav file from s3
         # if "audio_bucket" in podcast_metadata and "audio_key" in podcast_metadata:
         #     bucket = podcast_metadata["audio_bucket"]
