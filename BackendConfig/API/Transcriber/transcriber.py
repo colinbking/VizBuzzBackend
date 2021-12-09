@@ -87,8 +87,8 @@ class Transcriber():
     def transcribe_from_url(self, url = None, pitch = True):
         if url is None:
             url = "https://cdn.simplecast.com/audio/bceb3f91-afbb-4f97-87f6-5f4387bbb382/episodes/b5d7ea27-3fe2-4b88-913f-7b37e67fb35e/audio/79a85e01-7fb2-49cf-8df8-632f290e468f/default_tc.mp3?aid=rss_feed&feed=c2RzTGta"
-        vzsr = vz_speech_recog(pitch) 
-        vzsr.download_file(url)
+        vzsr = vz_speech_recog(pitch = pitch) 
+        # vzsr.download_file(url)
         vzsr.speech_recognition_with_push_stream("out_wavs/test.wav")
         # self.fetcher.s3.upload_file('new_data.json', os.getenv("TRANSCRIPT_BUCKET_NAME"), key + '.json')
         return True
@@ -278,7 +278,7 @@ class vz_speech_recog:
         print("wrote to json successfully")
 
     def add_pitch_to_file(self, o):
-        no = self.add_pitch_to_output(o, self.pitch)
+        no = self.add_pitch_to_output(o) if self.pitch else o
         print("added pitch successfully")
 
         truncate_utf8_chars('data.json', 1)  # remove the ending ]
@@ -337,7 +337,7 @@ class vz_speech_recog:
 
         return mid_output
 
-    def add_pitch_to_output(self, output_format: dict, cut=None, plot=False, pitch = False):
+    def add_pitch_to_output(self, output_format: dict, cut=None, plot=False):
         running_frame_count = 0
         avgs = []
 
@@ -370,7 +370,8 @@ class vz_speech_recog:
             # print('got here - torch begin')
 
             frames = frames.astype(np.float32) / np.iinfo(np.int16).max
-            if pitch:
+            if self.pitch:
+                print("pitch on")
                 audioload = torch.tensor(np.copy(frames))[None]
 
                 # Compute pitch using first gpu
